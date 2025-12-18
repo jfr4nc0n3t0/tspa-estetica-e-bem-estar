@@ -62,66 +62,66 @@ export default function TestimonialsSection() {
           </p>
         </div>
 
-        <div className="px-8 md:px-12">
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            plugins={[
-              Autoplay({
-                delay: 4000,
-                stopOnInteraction: false,
-                stopOnMouseEnter: true,
-              }),
-            ]}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-4">
-              {testimonials.map((testimonial) => (
-                <CarouselItem
-                  key={testimonial.id}
-                  className="pl-4 md:basis-1/2 lg:basis-1/3"
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          plugins={[
+            Autoplay({
+              delay: 4000,
+              stopOnInteraction: false,
+              stopOnMouseEnter: true,
+            }),
+          ]}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
+            {testimonials.map((testimonial) => (
+              <CarouselItem
+                key={testimonial.id}
+                className="pl-4 md:basis-1/2 lg:basis-1/3"
+              >
+                <Card
+                  className="p-6 md:p-8 h-full"
+                  data-testid={`card-testimonial-${testimonial.id}`}
                 >
-                  <Card
-                    className="p-6 md:p-8 h-full"
-                    data-testid={`card-testimonial-${testimonial.id}`}
-                  >
-                    <div className="flex gap-1 mb-4">
-                      {Array.from({ length: testimonial.rating }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className="h-4 w-4 fill-primary text-primary"
-                        />
-                      ))}
-                    </div>
-                    <p className="text-foreground leading-relaxed mb-6">
-                      "{testimonial.text}"
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-primary font-semibold text-sm">
-                          {testimonial.name.charAt(0)}
-                        </span>
-                      </div>
-                      <span className="font-medium text-foreground">
-                        {testimonial.name}
+                  <div className="flex gap-1 mb-4">
+                    {Array.from({ length: testimonial.rating }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="h-4 w-4 fill-primary text-primary"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-foreground leading-relaxed mb-6">
+                    "{testimonial.text}"
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-primary font-semibold text-sm">
+                        {testimonial.name.charAt(0)}
                       </span>
                     </div>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
+                    <span className="font-medium text-foreground">
+                      {testimonial.name}
+                    </span>
+                  </div>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <div className="flex justify-center gap-4 mt-8">
             <CarouselPrevious
-              className="hidden md:flex"
+              className="static translate-y-0"
               data-testid="button-carousel-prev"
             />
             <CarouselNext
-              className="hidden md:flex"
+              className="static translate-y-0"
               data-testid="button-carousel-next"
             />
-          </Carousel>
-        </div>
+          </div>
+        </Carousel>
       </div>
     </section>
   );
