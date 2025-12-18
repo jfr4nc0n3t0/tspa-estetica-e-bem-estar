@@ -10,17 +10,17 @@ const quickLinks = [
 const socialLinks = [
   {
     label: "Instagram",
-    href: "https://instagram.com/essencespa",
+    href: "https://instagram.com/tspa.estetica",
     icon: SiInstagram,
   },
   {
     label: "Facebook",
-    href: "https://facebook.com/essencespa",
+    href: "https://facebook.com/tspa.estetica",
     icon: SiFacebook,
   },
   {
     label: "WhatsApp",
-    href: "https://wa.me/5511999999999",
+    href: "https://wa.me/5583988896935",
     icon: SiWhatsapp,
   },
 ];
@@ -40,10 +40,10 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <span className="font-serif text-2xl font-bold text-foreground">
-                Essence
+                TSpa
               </span>
               <span className="font-serif text-lg font-light text-primary">
-                SPA
+                Estética e Bem-Estar
               </span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
@@ -93,7 +93,7 @@ export default function Footer() {
         </div>
 
         <div className="py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Essence SPA. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} TSpa Estética e Bem-Estar. Todos os direitos reservados.</p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <a href="#" className="hover:text-primary transition-colors">
               Política de Privacidade

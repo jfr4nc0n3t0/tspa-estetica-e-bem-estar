@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import logoImage from "@assets/tspa_logo.png";
 
 const navItems = [
   { label: "Início", href: "#inicio" },
@@ -50,16 +51,19 @@ export default function Header() {
             className="flex items-center gap-2"
             data-testid="link-logo"
           >
-            <span className={`font-serif text-2xl md:text-3xl font-bold tracking-tight ${
-              isScrolled ? "text-foreground" : "text-white"
-            }`}>
-              Essence
-            </span>
-            <span className={`font-serif text-lg md:text-xl font-light ${
-              isScrolled ? "text-primary" : "text-white/90"
-            }`}>
-              SPA
-            </span>
+            <img src={logoImage} alt="TSpa Logo" className="h-10 md:h-12 w-auto" />
+            <div className="flex flex-col">
+              <span className={`font-serif text-lg md:text-xl font-bold tracking-tight leading-tight ${
+                isScrolled ? "text-foreground" : "text-white"
+              }`}>
+                TSpa
+              </span>
+              <span className={`text-xs md:text-sm font-light leading-tight ${
+                isScrolled ? "text-muted-foreground" : "text-white/80"
+              }`}>
+                Estética e Bem-Estar
+              </span>
+            </div>
           </a>
 
           <nav className="hidden md:flex items-center gap-1 flex-wrap" data-testid="nav-desktop">
