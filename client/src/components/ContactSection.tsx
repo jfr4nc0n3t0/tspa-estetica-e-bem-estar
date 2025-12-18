@@ -40,9 +40,9 @@ export default function ContactSection() {
   };
 
   const openWhatsApp = () => {
-    const phone = "5583999999999";
+    const phone = "5583988896935";
     const message = encodeURIComponent(
-      "Olá! Gostaria de mais informações sobre os serviços da Dra. Thauany Santos.",
+      "Olá! Gostaria de mais informações sobre o TSpa Estética & Bem-Estar.",
     );
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
@@ -107,7 +107,7 @@ export default function ContactSection() {
                     type="tel"
                     value={formData.telefone}
                     onChange={handleChange}
-                    placeholder="(83) 99999-9999"
+                    placeholder="(11) 99999-9999"
                     className="mt-2"
                     data-testid="input-telefone"
                   />
@@ -157,7 +157,7 @@ export default function ContactSection() {
               </p>
               <Button
                 onClick={openWhatsApp}
-                className="w-full rounded-full gap-2"
+                className="w-full rounded-full gap-2 bg-green-600 hover:bg-green-700"
                 size="lg"
                 data-testid="button-whatsapp-contato"
               >
@@ -176,10 +176,10 @@ export default function ContactSection() {
                     E-mail
                   </h3>
                   <a
-                    href="mailto:contato@thauanysantos.com.br"
+                    href="mailto:contato@essencespa.com.br"
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
-                    contato@thauanysantos.com.br
+                    contato@essencespa.com.br
                   </a>
                 </div>
               </div>

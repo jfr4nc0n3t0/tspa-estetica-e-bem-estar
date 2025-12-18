@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import logoImage from "@assets/WhatsApp_Image_2025-12-17_at_21.23.53_1766017460095.jpeg";
 
 const navItems = [
   { label: "Início", href: "#inicio" },
@@ -48,14 +47,19 @@ export default function Header() {
               e.preventDefault();
               scrollToSection("#inicio");
             }}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2"
             data-testid="link-logo"
           >
-            <img
-              src={logoImage}
-              alt="Thauany Santos Fisioterapia"
-              className="h-12 md:h-14 w-auto object-contain"
-            />
+            <span className={`font-serif text-2xl md:text-3xl font-bold tracking-tight ${
+              isScrolled ? "text-foreground" : "text-white"
+            }`}>
+              Essence
+            </span>
+            <span className={`font-serif text-lg md:text-xl font-light ${
+              isScrolled ? "text-primary" : "text-white/90"
+            }`}>
+              SPA
+            </span>
           </a>
 
           <nav className="hidden md:flex items-center gap-1 flex-wrap" data-testid="nav-desktop">

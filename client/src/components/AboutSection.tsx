@@ -2,10 +2,10 @@ import { CheckCircle } from "lucide-react";
 import aboutImage from "@assets/generated_images/physiotherapist_professional_portrait.png";
 
 const credentials = [
-  "Graduada em Fisioterapia",
+  "Graduada em Fisioterapia pela USP",
   "Especialista em Terapias Manuais",
-  "Certificada em SPA Therapy",
-  "Atendimento Humanizado",
+  "Certificada em SPA Therapy Internacional",
+  "Mais de 15 anos de experiência",
 ];
 
 export default function AboutSection() {
@@ -21,13 +21,13 @@ export default function AboutSection() {
             <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-xl">
               <img
                 src={aboutImage}
-                alt="Dra. Thauany Santos - Fisioterapeuta"
+                alt="Dra. Marina Santos - Fisioterapeuta"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="absolute -bottom-6 -right-6 bg-primary text-primary-foreground p-6 rounded-xl shadow-lg hidden md:block">
-              <p className="text-3xl font-bold">SPA</p>
-              <p className="text-sm opacity-90">& Fisioterapia</p>
+              <p className="text-3xl font-bold">15+</p>
+              <p className="text-sm opacity-90">Anos de Experiência</p>
             </div>
           </div>
 
@@ -36,11 +36,11 @@ export default function AboutSection() {
               Sobre Nós
             </span>
             <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-              Thauany Santos
+              Dra. Marina Santos
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-              Com dedicação à fisioterapia e terapias holísticas, 
-              criei este espaço com a missão de proporcionar um ambiente onde saúde 
+              Com mais de 15 anos de experiência em fisioterapia e terapias holísticas, 
+              fundei o Essence SPA com a missão de proporcionar um espaço onde saúde 
               e bem-estar se encontram em perfeita harmonia.
             </p>
             <p className="text-muted-foreground text-lg leading-relaxed mb-8">

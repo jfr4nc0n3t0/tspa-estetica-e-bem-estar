@@ -12,8 +12,8 @@ export default function HeroSection() {
   };
 
   const openWhatsApp = () => {
-    const phone = "5583999999999";
-    const message = encodeURIComponent("Olá! Gostaria de agendar uma consulta com a Dra. Thauany Santos.");
+    const phone = "5511999999999";
+    const message = encodeURIComponent("Olá! Gostaria de agendar uma consulta no Essence SPA.");
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
 
@@ -46,7 +46,7 @@ export default function HeroSection() {
           <Button
             size="lg"
             onClick={openWhatsApp}
-            className="rounded-full px-8 py-6 text-lg font-semibold gap-2"
+            className="rounded-full px-8 py-6 text-lg font-semibold gap-2 bg-green-600 hover:bg-green-700 border-green-700"
             data-testid="button-whatsapp-hero"
           >
             <SiWhatsapp className="h-5 w-5" />

@@ -31,7 +31,7 @@ export default function ServiceCard({
   const [isOpen, setIsOpen] = useState(false);
 
   const openWhatsApp = () => {
-    const phone = "5583999999999";
+    const phone = "5511999999999";
     const message = encodeURIComponent(`Olá! Gostaria de agendar o serviço: ${title}`);
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
@@ -110,7 +110,7 @@ export default function ServiceCard({
             </div>
             <Button
               onClick={openWhatsApp}
-              className="w-full rounded-full gap-2"
+              className="w-full rounded-full gap-2 bg-green-600 hover:bg-green-700"
               data-testid="button-whatsapp-modal"
             >
               <SiWhatsapp className="h-5 w-5" />
