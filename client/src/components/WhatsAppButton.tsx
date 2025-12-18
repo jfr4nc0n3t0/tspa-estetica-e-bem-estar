@@ -2,9 +2,9 @@ import { SiWhatsapp } from "react-icons/si";
 
 export default function WhatsAppButton() {
   const openWhatsApp = () => {
-    const phone = "5583988896935";
+    const phone = "5583999999999";
     const message = encodeURIComponent(
-      "Olá! Gostaria de agendar uma consulta no TSpa Estética & Bem-Estar.",
+      "Olá! Gostaria de agendar um atendimento de fisioterapia domiciliar com a Dra. Thauany Santos.",
     );
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
@@ -12,7 +12,7 @@ export default function WhatsAppButton() {
   return (
     <button
       onClick={openWhatsApp}
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-105"
+      className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-105"
       aria-label="Contato via WhatsApp"
       data-testid="button-whatsapp-float"
     >

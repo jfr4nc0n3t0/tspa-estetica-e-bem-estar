@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import logoImage from "@assets/WhatsApp_Image_2025-12-17_at_21.23.53_1766017460095.jpeg";
 
 const navItems = [
   { label: "Início", href: "#inicio" },
   { label: "Sobre", href: "#sobre" },
-  { label: "Experiências", href: "#experiencias" },
+  { label: "Serviços", href: "#servicos" },
   { label: "Localização", href: "#localizacao" },
   { label: "Contato", href: "#contato" },
 ];
@@ -47,19 +48,14 @@ export default function Header() {
               e.preventDefault();
               scrollToSection("#inicio");
             }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-3"
             data-testid="link-logo"
           >
-            <span className={`font-serif text-2xl md:text-3xl font-bold tracking-tight ${
-              isScrolled ? "text-foreground" : "text-white"
-            }`}>
-              Essence
-            </span>
-            <span className={`font-serif text-lg md:text-xl font-light ${
-              isScrolled ? "text-primary" : "text-white/90"
-            }`}>
-              SPA
-            </span>
+            <img
+              src={logoImage}
+              alt="Thauany Santos Fisioterapia"
+              className="h-12 md:h-14 w-auto object-contain"
+            />
           </a>
 
           <nav className="hidden md:flex items-center gap-1 flex-wrap" data-testid="nav-desktop">
@@ -85,7 +81,7 @@ export default function Header() {
               className="rounded-full"
               data-testid="button-agendar-header"
             >
-              Agendar Consulta
+              Agendar Atendimento
             </Button>
           </div>
 
@@ -119,7 +115,7 @@ export default function Header() {
               className="mt-2 rounded-full"
               data-testid="button-agendar-mobile"
             >
-              Agendar Consulta
+              Agendar Atendimento
             </Button>
           </nav>
         </div>

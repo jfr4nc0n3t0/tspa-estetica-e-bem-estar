@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Mail, Clock, Send } from "lucide-react";
+import { Mail, Clock, Send, Phone } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,7 +26,7 @@ export default function ContactSection() {
 
     toast({
       title: "Mensagem enviada!",
-      description: "Retornaremos em breve. Obrigado pelo contato!",
+      description: "Retornarei em breve. Obrigada pelo contato!",
     });
 
     setFormData({ nome: "", email: "", telefone: "", mensagem: "" });
@@ -40,9 +40,9 @@ export default function ContactSection() {
   };
 
   const openWhatsApp = () => {
-    const phone = "5583988896935";
+    const phone = "5583999999999";
     const message = encodeURIComponent(
-      "Olá! Gostaria de mais informações sobre o TSpa Estética & Bem-Estar.",
+      "Olá! Gostaria de mais informações sobre os serviços de fisioterapia domiciliar da Dra. Thauany Santos.",
     );
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
@@ -62,8 +62,8 @@ export default function ContactSection() {
             Entre em Contato
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Tire suas dúvidas ou agende sua visita. Estamos prontos para
-            atendê-lo.
+            Agende seu atendimento domiciliar ou tire suas dúvidas. 
+            Estou pronta para ajudá-lo.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export default function ContactSection() {
                     type="tel"
                     value={formData.telefone}
                     onChange={handleChange}
-                    placeholder="(11) 99999-9999"
+                    placeholder="(83) 99999-9999"
                     className="mt-2"
                     data-testid="input-telefone"
                   />
@@ -121,7 +121,7 @@ export default function ContactSection() {
                   name="mensagem"
                   value={formData.mensagem}
                   onChange={handleChange}
-                  placeholder="Como podemos ajudá-lo?"
+                  placeholder="Como posso ajudá-lo?"
                   rows={4}
                   required
                   className="mt-2 resize-none"
@@ -141,7 +141,7 @@ export default function ContactSection() {
 
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                <span>Respondemos em até 2 horas</span>
+                <span>Respondo em até 2 horas</span>
               </div>
             </form>
           </Card>
@@ -152,18 +152,37 @@ export default function ContactSection() {
                 Prefere um atendimento mais rápido?
               </h3>
               <p className="text-muted-foreground mb-6">
-                Entre em contato diretamente pelo WhatsApp e receba atendimento
-                imediato da nossa equipe.
+                Entre em contato diretamente pelo WhatsApp e receba 
+                atendimento imediato.
               </p>
               <Button
                 onClick={openWhatsApp}
-                className="w-full rounded-full gap-2 bg-green-600 hover:bg-green-700"
+                className="w-full rounded-full gap-2"
                 size="lg"
                 data-testid="button-whatsapp-contato"
               >
                 <SiWhatsapp className="h-5 w-5" />
                 Conversar no WhatsApp
               </Button>
+            </Card>
+
+            <Card className="p-6 md:p-8">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Phone className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg mb-1">
+                    Telefone / WhatsApp
+                  </h3>
+                  <a
+                    href="tel:+5583999999999"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    (83) 99999-9999
+                  </a>
+                </div>
+              </div>
             </Card>
 
             <Card className="p-6 md:p-8">
@@ -176,10 +195,10 @@ export default function ContactSection() {
                     E-mail
                   </h3>
                   <a
-                    href="mailto:contato@essencespa.com.br"
+                    href="mailto:contato@thauanysantos.com.br"
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
-                    contato@essencespa.com.br
+                    contato@thauanysantos.com.br
                   </a>
                 </div>
               </div>
