@@ -22,7 +22,7 @@ export default function LocationSection() {
             Venha Nos Visitar
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Estamos localizados em um ambiente tranquilo e de fácil acesso, 
+            Estamos localizados em um ambiente tranquilo e de fácil acesso,
             prontos para receber você.
           </p>
         </div>
@@ -37,7 +37,7 @@ export default function LocationSection() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Localização do Essence SPA"
+              title="Localização do TSpa Estética & Bem-Estar"
             />
           </div>
 
@@ -47,11 +47,15 @@ export default function LocationSection() {
                 <MapPin className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground text-lg mb-1">Endereço</h3>
+                <h3 className="font-semibold text-foreground text-lg mb-1">
+                  Endereço
+                </h3>
                 <p className="text-muted-foreground">
-                  Av. Paulista, 1000 - Sala 501<br />
-                  Bela Vista, São Paulo - SP<br />
-                  CEP: 01310-100
+                  R. Enfermeira Ana Maria Barbosa, 1109
+                  <br />
+                  J. Cidade Universitária, João Pessoa - PB
+                  <br />
+                  CEP: 58052-270
                 </p>
               </div>
             </div>
@@ -61,10 +65,15 @@ export default function LocationSection() {
                 <Clock className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground text-lg mb-2">Horário de Funcionamento</h3>
+                <h3 className="font-semibold text-foreground text-lg mb-2">
+                  Horário de Funcionamento
+                </h3>
                 <div className="space-y-1">
                   {businessHours.map((schedule) => (
-                    <div key={schedule.day} className="flex justify-between gap-4 text-muted-foreground">
+                    <div
+                      key={schedule.day}
+                      className="flex justify-between gap-4 text-muted-foreground"
+                    >
                       <span>{schedule.day}</span>
                       <span className="font-medium">{schedule.hours}</span>
                     </div>
@@ -78,24 +87,16 @@ export default function LocationSection() {
                 <Phone className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground text-lg mb-1">Telefone</h3>
+                <h3 className="font-semibold text-foreground text-lg mb-1">
+                  Telefone
+                </h3>
                 <p className="text-muted-foreground">
-                  <a href="tel:+551199999999" className="hover:text-primary transition-colors">
-                    (11) 9999-9999
+                  <a
+                    href="tel:+5583988896935"
+                    className="hover:text-primary transition-colors"
+                  >
+                    (83) 98889-6935
                   </a>
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Car className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground text-lg mb-1">Estacionamento</h3>
-                <p className="text-muted-foreground">
-                  Estacionamento conveniado no prédio<br />
-                  com desconto para clientes.
                 </p>
               </div>
             </div>

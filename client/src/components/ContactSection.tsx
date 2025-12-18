@@ -33,13 +33,17 @@ export default function ContactSection() {
     setIsSubmitting(false);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const openWhatsApp = () => {
-    const phone = "5511999999999";
-    const message = encodeURIComponent("Olá! Gostaria de mais informações sobre o Essence SPA.");
+    const phone = "5583988896935";
+    const message = encodeURIComponent(
+      "Olá! Gostaria de mais informações sobre o TSpa Estética & Bem-Estar.",
+    );
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
 
@@ -58,7 +62,8 @@ export default function ContactSection() {
             Entre em Contato
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Tire suas dúvidas ou agende sua visita. Estamos prontos para atendê-lo.
+            Tire suas dúvidas ou agende sua visita. Estamos prontos para
+            atendê-lo.
           </p>
         </div>
 
@@ -147,8 +152,8 @@ export default function ContactSection() {
                 Prefere um atendimento mais rápido?
               </h3>
               <p className="text-muted-foreground mb-6">
-                Entre em contato diretamente pelo WhatsApp e receba 
-                atendimento imediato da nossa equipe.
+                Entre em contato diretamente pelo WhatsApp e receba atendimento
+                imediato da nossa equipe.
               </p>
               <Button
                 onClick={openWhatsApp}
@@ -167,7 +172,9 @@ export default function ContactSection() {
                   <Mail className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-lg mb-1">E-mail</h3>
+                  <h3 className="font-semibold text-foreground text-lg mb-1">
+                    E-mail
+                  </h3>
                   <a
                     href="mailto:contato@essencespa.com.br"
                     className="text-muted-foreground hover:text-primary transition-colors"
