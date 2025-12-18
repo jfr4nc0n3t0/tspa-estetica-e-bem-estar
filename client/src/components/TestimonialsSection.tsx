@@ -1,5 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Star } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 const testimonials = [
   {
@@ -18,6 +26,18 @@ const testimonials = [
     id: 3,
     name: "Carla Mendes",
     text: "Melhor experiência de spa que já tive. O ambiente é acolhedor e os resultados são visíveis desde a primeira sessão.",
+    rating: 5,
+  },
+  {
+    id: 4,
+    name: "Ana Paula",
+    text: "Thauny é uma profissional incrível! Cuidado e atenção em cada detalhe. Saio sempre renovada das sessões.",
+    rating: 5,
+  },
+  {
+    id: 5,
+    name: "Fernanda Lima",
+    text: "Excelente atendimento e resultados surpreendentes. O TSpa se tornou meu lugar favorito para cuidar de mim mesma.",
     rating: 5,
   },
 ];
@@ -42,36 +62,65 @@ export default function TestimonialsSection() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-          {testimonials.map((testimonial) => (
-            <Card
-              key={testimonial.id}
-              className="p-6 md:p-8"
-              data-testid={`card-testimonial-${testimonial.id}`}
-            >
-              <div className="flex gap-1 mb-4">
-                {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-4 w-4 fill-primary text-primary"
-                  />
-                ))}
-              </div>
-              <p className="text-foreground leading-relaxed mb-6">
-                "{testimonial.text}"
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-primary font-semibold text-sm">
-                    {testimonial.name.charAt(0)}
-                  </span>
-                </div>
-                <span className="font-medium text-foreground">
-                  {testimonial.name}
-                </span>
-              </div>
-            </Card>
-          ))}
+        <div className="px-8 md:px-12">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 4000,
+                stopOnInteraction: false,
+                stopOnMouseEnter: true,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {testimonials.map((testimonial) => (
+                <CarouselItem
+                  key={testimonial.id}
+                  className="pl-4 md:basis-1/2 lg:basis-1/3"
+                >
+                  <Card
+                    className="p-6 md:p-8 h-full"
+                    data-testid={`card-testimonial-${testimonial.id}`}
+                  >
+                    <div className="flex gap-1 mb-4">
+                      {Array.from({ length: testimonial.rating }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-4 w-4 fill-primary text-primary"
+                        />
+                      ))}
+                    </div>
+                    <p className="text-foreground leading-relaxed mb-6">
+                      "{testimonial.text}"
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary font-semibold text-sm">
+                          {testimonial.name.charAt(0)}
+                        </span>
+                      </div>
+                      <span className="font-medium text-foreground">
+                        {testimonial.name}
+                      </span>
+                    </div>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious
+              className="hidden md:flex"
+              data-testid="button-carousel-prev"
+            />
+            <CarouselNext
+              className="hidden md:flex"
+              data-testid="button-carousel-next"
+            />
+          </Carousel>
         </div>
       </div>
     </section>
