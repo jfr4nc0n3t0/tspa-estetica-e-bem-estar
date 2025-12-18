@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Clock, Sparkles, LucideIcon } from "lucide-react";
+import { Clock, Sparkles } from "lucide-react";
 import { useState } from "react";
 import {
   Dialog,
@@ -14,67 +14,85 @@ import { SiWhatsapp } from "react-icons/si";
 interface ServiceCardProps {
   title: string;
   description: string;
-  icon: LucideIcon;
+  image: string;
   duration: string;
   benefits: string[];
+  price?: string;
 }
 
 export default function ServiceCard({
   title,
   description,
-  icon: Icon,
+  image,
   duration,
   benefits,
+  price,
 }: ServiceCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const openWhatsApp = () => {
     const phone = "5583999999999";
-    const message = encodeURIComponent(`Olá! Gostaria de agendar uma sessão de ${title} com a Dra. Thauany Santos.`);
+    const message = encodeURIComponent(`Olá! Gostaria de agendar o serviço: ${title}`);
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
 
   return (
     <>
       <Card
-        className="group overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg p-6"
+        className="group overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg"
         onClick={() => setIsOpen(true)}
         data-testid={`card-service-${title.toLowerCase().replace(/\s+/g, "-")}`}
       >
-        <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-          <Icon className="h-7 w-7 text-primary" />
+        <div className="aspect-video overflow-hidden">
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         </div>
-        <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
-          {title}
-        </h3>
-        <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-3">
-          {description}
-        </p>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>{duration}</span>
+        <div className="p-6">
+          <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
+            {title}
+          </h3>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-3">
+            {description}
+          </p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>{duration}</span>
+            </div>
+            {price && (
+              <span className="text-primary font-semibold">{price}</span>
+            )}
+          </div>
         </div>
       </Card>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-lg" data-testid={`modal-service-${title.toLowerCase().replace(/\s+/g, "-")}`}>
           <DialogHeader>
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Icon className="h-6 w-6 text-primary" />
-              </div>
-              <DialogTitle className="font-serif text-2xl">{title}</DialogTitle>
-            </div>
+            <DialogTitle className="font-serif text-2xl">{title}</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               {description}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="aspect-video rounded-lg overflow-hidden">
+              <img
+                src={image}
+                alt={title}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <span>Duração: {duration}</span>
               </div>
+              {price && (
+                <span className="text-primary font-semibold text-lg">{price}</span>
+              )}
             </div>
             <div>
               <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">

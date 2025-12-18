@@ -4,7 +4,7 @@ export default function WhatsAppButton() {
   const openWhatsApp = () => {
     const phone = "5583999999999";
     const message = encodeURIComponent(
-      "Olá! Gostaria de agendar um atendimento de fisioterapia domiciliar com a Dra. Thauany Santos.",
+      "Olá! Gostaria de agendar uma consulta com a Dra. Thauany Santos.",
     );
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };

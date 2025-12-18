@@ -6,7 +6,7 @@ import logoImage from "@assets/WhatsApp_Image_2025-12-17_at_21.23.53_17660174600
 const navItems = [
   { label: "Início", href: "#inicio" },
   { label: "Sobre", href: "#sobre" },
-  { label: "Serviços", href: "#servicos" },
+  { label: "Experiências", href: "#experiencias" },
   { label: "Localização", href: "#localizacao" },
   { label: "Contato", href: "#contato" },
 ];
@@ -81,7 +81,7 @@ export default function Header() {
               className="rounded-full"
               data-testid="button-agendar-header"
             >
-              Agendar Atendimento
+              Agendar Consulta
             </Button>
           </div>
 
@@ -115,7 +115,7 @@ export default function Header() {
               className="mt-2 rounded-full"
               data-testid="button-agendar-mobile"
             >
-              Agendar Atendimento
+              Agendar Consulta
             </Button>
           </nav>
         </div>

@@ -1,9 +1,9 @@
-import { MapPin, Clock, Phone, Home } from "lucide-react";
+import { MapPin, Clock, Phone, Car } from "lucide-react";
 
 const businessHours = [
-  { day: "Segunda a Sexta", hours: "7h às 19h" },
-  { day: "Sábado", hours: "8h às 14h" },
-  { day: "Domingo", hours: "Sob demanda" },
+  { day: "Segunda a Sexta", hours: "8h às 20h" },
+  { day: "Sábado", hours: "9h às 18h" },
+  { day: "Domingo", hours: "Fechado" },
 ];
 
 export default function LocationSection() {
@@ -16,14 +16,14 @@ export default function LocationSection() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
           <span className="inline-block text-primary text-sm font-medium tracking-widest uppercase mb-4">
-            Atendimento
+            Localização
           </span>
           <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-            Área de Atendimento
+            Venha Nos Visitar
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Atendimento domiciliar em João Pessoa e região metropolitana.
-            Levo o cuidado até você!
+            Estamos localizados em um ambiente tranquilo e de fácil acesso,
+            prontos para receber você.
           </p>
         </div>
 
@@ -37,25 +37,23 @@ export default function LocationSection() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Área de atendimento - João Pessoa e região"
+              title="Localização - Thauany Santos Fisioterapia"
             />
           </div>
 
           <div className="space-y-8">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Home className="h-6 w-6 text-primary" />
+                <MapPin className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-lg mb-1">
-                  Atendimento Domiciliar
+                  Endereço
                 </h3>
                 <p className="text-muted-foreground">
-                  João Pessoa e região metropolitana
+                  João Pessoa - PB
                   <br />
-                  Cabedelo, Bayeux, Santa Rita
-                  <br />
-                  Conde e praias próximas
+                  Paraíba, Brasil
                 </p>
               </div>
             </div>
@@ -66,7 +64,7 @@ export default function LocationSection() {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-lg mb-2">
-                  Horário de Atendimento
+                  Horário de Funcionamento
                 </h3>
                 <div className="space-y-1">
                   {businessHours.map((schedule) => (
@@ -88,7 +86,7 @@ export default function LocationSection() {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-lg mb-1">
-                  Telefone / WhatsApp
+                  Telefone
                 </h3>
                 <p className="text-muted-foreground">
                   <a
@@ -103,18 +101,14 @@ export default function LocationSection() {
 
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <MapPin className="h-6 w-6 text-primary" />
+                <Car className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-lg mb-1">
-                  Como Funciona
+                  Estacionamento
                 </h3>
                 <p className="text-muted-foreground">
-                  Agende seu atendimento pelo WhatsApp.
-                  <br />
-                  Vou até você com todo o equipamento necessário
-                  <br />
-                  para realizar o tratamento no conforto do seu lar.
+                  Estacionamento gratuito disponível para clientes.
                 </p>
               </div>
             </div>
