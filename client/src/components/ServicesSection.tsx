@@ -8,7 +8,7 @@ import modelingImg from "@assets/stock_images/body_contouring_mass_623df98e.jpg"
 import therapeuticImg from "@assets/stock_images/therapeutic_massage__164be636.jpg";
 import cleansingImg from "@assets/stock_images/facial_cleansing_ski_d9bbf67e.jpg";
 import hydrationImg from "@assets/stock_images/facial_hydration_mas_2644cfa8.jpg";
-import clayMaskImg from "@assets/stock_images/clay_mask_facial_spa_059e74ea.jpg";
+import clayMaskImg from "@assets/WhatsApp_Image_2025-12-26_at_18.12.46_1766783677163.jpeg";
 import packageImg from "@assets/stock_images/spa_wellness_package_e0a465e6.jpg";
 
 const massageServices = [
