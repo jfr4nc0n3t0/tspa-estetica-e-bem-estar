@@ -43,6 +43,7 @@ const massageServices = [
     duration: "60 min",
     description: "Indicada para dores musculares, tensões crônicas e desconfortos nas costas, pescoço e lombar.",
     price: "R$ 130",
+    bonus: "inclui escalda pés",
     image: therapeuticImg,
   },
 ];
