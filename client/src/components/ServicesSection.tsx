@@ -2,12 +2,14 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Sparkles } from "lucide-react";
 
-import massageImg1 from "@assets/stock_images/relaxing_spa_massage_1f1cc799.jpg";
-import massageImg2 from "@assets/stock_images/relaxing_spa_massage_1334717b.jpg";
-import facialImg1 from "@assets/stock_images/facial_treatment_ski_69d8f944.jpg";
-import facialImg2 from "@assets/stock_images/facial_treatment_ski_e8524b5b.jpg";
-import packageImg1 from "@assets/stock_images/spa_wellness_package_c290781e.jpg";
-import packageImg2 from "@assets/stock_images/spa_wellness_package_287d621c.jpg";
+import relaxingMassageImg from "@assets/stock_images/relaxing_back_massag_e4667eea.jpg";
+import drainageImg from "@assets/stock_images/lymphatic_drainage_m_f1921d3f.jpg";
+import modelingImg from "@assets/stock_images/body_contouring_mass_623df98e.jpg";
+import therapeuticImg from "@assets/stock_images/therapeutic_massage__164be636.jpg";
+import cleansingImg from "@assets/stock_images/facial_cleansing_ski_d9bbf67e.jpg";
+import hydrationImg from "@assets/stock_images/facial_hydration_mas_2644cfa8.jpg";
+import clayMaskImg from "@assets/stock_images/clay_mask_facial_spa_059e74ea.jpg";
+import packageImg from "@assets/stock_images/spa_wellness_package_e0a465e6.jpg";
 
 const massageServices = [
   {
@@ -17,7 +19,7 @@ const massageServices = [
     description: "Indicada para aliviar estresse, ansiedade e tensão muscular. Utiliza óleos aromáticos e manobras lentas, promovendo relaxamento profundo e bem-estar.",
     price: "R$ 100",
     bonus: "inclui escalda pés",
-    image: massageImg1,
+    image: relaxingMassageImg,
   },
   {
     id: 2,
@@ -25,7 +27,7 @@ const massageServices = [
     duration: "60 min",
     description: "Técnica com movimentos suaves e ritmados que auxiliam na redução de inchaço, retenção de líquidos e melhora da circulação.",
     price: "R$ 120",
-    image: massageImg2,
+    image: drainageImg,
   },
   {
     id: 3,
@@ -33,7 +35,7 @@ const massageServices = [
     duration: "50 min",
     description: "Massagem com manobras mais intensas, focada em abdômen, cintura, coxas e glúteos, auxiliando na melhora do contorno corporal.",
     price: "R$ 110",
-    image: massageImg1,
+    image: modelingImg,
   },
   {
     id: 4,
@@ -41,7 +43,7 @@ const massageServices = [
     duration: "60 min",
     description: "Indicada para dores musculares, tensões crônicas e desconfortos nas costas, pescoço e lombar.",
     price: "R$ 130",
-    image: massageImg2,
+    image: therapeuticImg,
   },
 ];
 
@@ -52,7 +54,7 @@ const facialServices = [
     duration: "40 min",
     description: "Higienização profunda, esfoliação e aplicação de máscara revitalizante, deixando a pele mais limpa e renovada.",
     price: "R$ 80",
-    image: facialImg1,
+    image: cleansingImg,
   },
   {
     id: 2,
@@ -60,7 +62,7 @@ const facialServices = [
     duration: "30 min",
     description: "Tratamento indicado para peles secas ou opacas, devolvendo maciez, viço e conforto à pele.",
     price: "R$ 70",
-    image: facialImg2,
+    image: hydrationImg,
   },
   {
     id: 3,
@@ -68,7 +70,7 @@ const facialServices = [
     duration: "30 min",
     description: "Auxilia no equilíbrio da pele, promove ação calmante e devolve luminosidade natural.",
     price: "R$ 65",
-    image: facialImg1,
+    image: clayMaskImg,
   },
 ];
 
@@ -81,7 +83,7 @@ const packages = [
     description: "Pode escolher entre massagem relaxante, drenagem linfática ou modeladora. (Não inclui massagem terapêutica)",
     price: "R$ 190",
     highlight: false,
-    image: packageImg1,
+    image: relaxingMassageImg,
   },
   {
     id: 2,
@@ -91,7 +93,7 @@ const packages = [
     description: "Pode escolher entre massagem relaxante, drenagem linfática ou modeladora. (Não inclui massagem terapêutica)",
     price: "R$ 320",
     highlight: true,
-    image: packageImg2,
+    image: drainageImg,
   },
   {
     id: 3,
@@ -101,7 +103,7 @@ const packages = [
     description: "Pode escolher entre massagem relaxante, drenagem linfática ou modeladora. (Não inclui massagem terapêutica)",
     price: "R$ 870",
     highlight: false,
-    image: packageImg1,
+    image: modelingImg,
   },
   {
     id: 4,
@@ -111,7 +113,7 @@ const packages = [
     description: "Massagem relaxante (60 min) + hidratação facial (30 min). Uma combinação para relaxar o corpo e cuidar da pele em uma única sessão.",
     price: "R$ 140",
     highlight: true,
-    image: packageImg2,
+    image: packageImg,
   },
 ];
 
@@ -130,7 +132,7 @@ function ServiceCard({ service }: { service: typeof massageServices[0] }) {
         </div>
       </div>
       <div className="p-5">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <Clock className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">{service.duration}</span>
           {service.bonus && (
