@@ -55,7 +55,7 @@ export default function HeroSection() {
           <Button
             variant="outline"
             size="lg"
-            onClick={() => scrollToSection("#experiencias")}
+            onClick={() => scrollToSection("#servicos")}
             className="rounded-full px-8 py-6 text-lg font-semibold bg-white/10 backdrop-blur-md text-white border-white/30 hover:bg-white/20 hover:text-white"
             data-testid="button-experiencias-hero"
           >
