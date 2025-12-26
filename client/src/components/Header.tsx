@@ -51,20 +51,27 @@ export default function Header() {
             data-testid="link-logo"
           >
             <div className="flex flex-col">
-              <span className={`font-serif text-xl md:text-2xl font-bold tracking-tight leading-tight ${
-                isScrolled ? "text-foreground" : "text-white"
-              }`}>
+              <span
+                className={`font-serif text-xl md:text-2xl font-bold tracking-tight leading-tight ${
+                  isScrolled ? "text-foreground" : "text-white"
+                }`}
+              >
                 TSpa
               </span>
-              <span className={`text-xs md:text-sm font-light leading-tight ${
-                isScrolled ? "text-primary" : "text-white/80"
-              }`}>
-                Estética e Bem-Estar
+              <span
+                className={`text-xs md:text-sm font-light leading-tight ${
+                  isScrolled ? "text-primary" : "text-white/80"
+                }`}
+              >
+                Fisioterapia e Bem-Estar
               </span>
             </div>
           </a>
 
-          <nav className="hidden md:flex items-center gap-1 flex-wrap" data-testid="nav-desktop">
+          <nav
+            className="hidden md:flex items-center gap-1 flex-wrap"
+            data-testid="nav-desktop"
+          >
             {navItems.map((item) => (
               <button
                 key={item.href}
@@ -85,7 +92,9 @@ export default function Header() {
             <Button
               onClick={() => {
                 const phone = "5583988896935";
-                const message = encodeURIComponent("Olá! Gostaria de agendar uma sessão no TSpa.");
+                const message = encodeURIComponent(
+                  "Olá! Gostaria de agendar uma sessão no TSpa.",
+                );
                 window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
               }}
               className="rounded-full gap-2 bg-green-600 hover:bg-green-700 border-green-700"
@@ -103,13 +112,20 @@ export default function Header() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             data-testid="button-mobile-menu"
           >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-background border-t border-border" data-testid="nav-mobile">
+        <div
+          className="md:hidden bg-background border-t border-border"
+          data-testid="nav-mobile"
+        >
           <nav className="flex flex-col p-4 gap-1">
             {navItems.map((item) => (
               <button
@@ -124,7 +140,9 @@ export default function Header() {
             <Button
               onClick={() => {
                 const phone = "5583988896935";
-                const message = encodeURIComponent("Olá! Gostaria de agendar uma sessão no TSpa.");
+                const message = encodeURIComponent(
+                  "Olá! Gostaria de agendar uma sessão no TSpa.",
+                );
                 window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
               }}
               className="mt-2 rounded-full gap-2 bg-green-600 hover:bg-green-700 border-green-700"
