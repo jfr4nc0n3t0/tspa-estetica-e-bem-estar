@@ -1,10 +1,4 @@
-import { CheckCircle } from "lucide-react";
 import aboutImage from "@assets/generated_images/physiotherapist_professional_portrait.png";
-
-const credentials = [
-  "Graduada em Fisioterapia pela Unipê",
-  "Mais de 5 anos de experiência",
-];
 
 export default function AboutSection() {
   return (
@@ -24,41 +18,40 @@ export default function AboutSection() {
               />
             </div>
             <div className="absolute -bottom-6 -right-6 bg-primary text-primary-foreground p-6 rounded-xl shadow-lg hidden md:block">
-              <p className="text-3xl font-bold">5+</p>
-              <p className="text-sm opacity-90">Anos de Experiência</p>
+              <p className="text-3xl font-bold">2021</p>
+              <p className="text-sm opacity-90">Formação em Fisioterapia</p>
             </div>
           </div>
 
           <div className="order-1 lg:order-2">
             <span className="inline-block text-primary text-sm font-medium tracking-widest uppercase mb-4">
-              Sobre Nós
+              Sobre Mim
             </span>
             <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
               Thauny Santos
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-              Com mais de 5 anos de experiência em fisioterapia e estética, 
-              fundei o TSpa Estética e Bem-Estar com a missão de proporcionar um espaço onde saúde 
-              e bem-estar se encontram em perfeita harmonia.
+              Sou fisioterapeuta formada desde 2021, com atuação dedicada ao cuidado integral 
+              do corpo e ao bem-estar físico e funcional. Ao longo da minha trajetória 
+              profissional, construí experiência em diferentes contextos da fisioterapia — 
+              hospitalar, clínica e atendimento domiciliar — o que me proporcionou um olhar 
+              amplo, humano e individualizado para cada pessoa que atendo.
             </p>
-            <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-              Nossa filosofia é tratar cada pessoa de forma única, combinando técnicas 
-              terapêuticas avançadas com tratamentos relaxantes que promovem a recuperação 
-              física e o equilíbrio mental. Aqui, você encontra um ambiente acolhedor 
-              e profissionais dedicados ao seu bem-estar.
+            <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+              Possuo formação complementar em terapia manual e reabilitação, áreas que 
+              aprofundaram minha compreensão sobre dor, movimento, recuperação e prevenção 
+              de disfunções musculoesqueléticas. Além disso, atuo como instrutora de Pilates, 
+              integrando fortalecimento, consciência corporal e equilíbrio como parte 
+              essencial do processo terapêutico.
             </p>
-
-            <div className="space-y-3">
-              {credentials.map((credential, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3"
-                  data-testid={`text-credential-${index}`}
-                >
-                  <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span className="text-foreground">{credential}</span>
-                </div>
-              ))}
+            <div className="bg-muted/50 p-6 rounded-xl border border-border">
+              <p className="text-foreground leading-relaxed italic">
+                "O TSpa nasce da união entre ciência, escuta e acolhimento. Cada atendimento 
+                é pensado de forma personalizada, respeitando os limites do corpo e promovendo 
+                não apenas alívio de dores, mas também bem-estar, relaxamento e qualidade de 
+                vida. Aqui, o cuidado vai além da técnica: é uma experiência de atenção, 
+                presença e conexão com o próprio corpo."
+              </p>
             </div>
           </div>
         </div>
