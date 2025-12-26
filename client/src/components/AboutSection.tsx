@@ -1,4 +1,4 @@
-import aboutImage from "@assets/generated_images/physiotherapist_professional_portrait.png";
+import aboutImage from "@assets/thau_1766782638523.jpeg";
 
 export default function AboutSection() {
   return (
