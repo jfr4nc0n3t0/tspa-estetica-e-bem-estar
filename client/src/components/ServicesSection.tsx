@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Sparkles } from "lucide-react";
 
 import relaxingMassageImg from "@assets/stock_images/relaxing_back_massag_e4667eea.jpg";
-import drainageImg from "@assets/stock_images/lymphatic_drainage_m_f1921d3f.jpg";
+import drainageImg from "@assets/image_1766783857869.png";
 import modelingImg from "@assets/modeladora_1766783752585.jpeg";
 import therapeuticImg from "@assets/image_1766783818873.png";
 import cleansingImg from "@assets/stock_images/facial_cleansing_ski_d9bbf67e.jpg";
