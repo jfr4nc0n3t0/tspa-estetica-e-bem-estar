@@ -31,7 +31,7 @@ const testimonials = [
   {
     id: 4,
     name: "Ana Paula",
-    text: "Thauny é uma profissional incrível! Cuidado e atenção em cada detalhe. Saio sempre renovada das sessões.",
+    text: "Thauany é uma profissional incrível! Cuidado e atenção em cada detalhe. Saio sempre renovada das sessões.",
     rating: 5,
   },
   {

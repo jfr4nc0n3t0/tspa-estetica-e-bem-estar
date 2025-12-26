@@ -13,7 +13,7 @@ export default function AboutSection() {
             <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-xl">
               <img
                 src={aboutImage}
-                alt="Thauny Santos - Fisioterapeuta"
+                alt="Thauany Santos - Fisioterapeuta"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -28,7 +28,7 @@ export default function AboutSection() {
               Sobre Mim
             </span>
             <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-              Thauny Santos
+              Thauany Santos
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-6">
               Sou fisioterapeuta formada desde 2021, com atuação dedicada ao cuidado integral 
