@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Sparkles } from "lucide-react";
 
-import relaxingMassageImg from "@assets/stock_images/relaxing_back_massag_e4667eea.jpg";
+import relaxingMassageImg from "@assets/image_1766783915313.png";
 import drainageImg from "@assets/image_1766783857869.png";
 import modelingImg from "@assets/modeladora_1766783752585.jpeg";
 import therapeuticImg from "@assets/image_1766783818873.png";
