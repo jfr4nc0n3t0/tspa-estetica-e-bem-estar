@@ -14,12 +14,12 @@ export default function AboutSection() {
               <img
                 src={aboutImage}
                 alt="Thauany Santos - Fisioterapeuta"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
               />
             </div>
             <div className="absolute -bottom-6 -right-6 bg-primary text-primary-foreground p-6 rounded-xl shadow-lg hidden md:block">
-              <p className="text-3xl font-bold">2021</p>
-              <p className="text-sm opacity-90">Formação em Fisioterapia</p>
+              <p className="text-3xl font-bold">5 anos</p>
+              <p className="text-sm opacity-90">Atuando na área</p>
             </div>
           </div>
 
@@ -31,7 +31,7 @@ export default function AboutSection() {
               Thauany Santos
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-              Sou fisioterapeuta formada desde 2021, com atuação dedicada ao cuidado integral 
+              Sou fisioterapeuta atuando há 5 anos, com dedicação ao cuidado integral 
               do corpo e ao bem-estar físico e funcional. Ao longo da minha trajetória 
               profissional, construí experiência em diferentes contextos da fisioterapia — 
               hospitalar, clínica e atendimento domiciliar — o que me proporcionou um olhar 
