@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { SiWhatsapp } from "react-icons/si";
 
 const navItems = [
   { label: "Início", href: "#inicio" },
   { label: "Sobre", href: "#sobre" },
   { label: "Serviços", href: "#servicos" },
   { label: "Localização", href: "#localizacao" },
-  { label: "Contato", href: "#contato" },
 ];
 
 export default function Header() {
@@ -83,11 +83,16 @@ export default function Header() {
 
           <div className="hidden md:flex items-center gap-3">
             <Button
-              onClick={() => scrollToSection("#contato")}
-              className="rounded-full"
+              onClick={() => {
+                const phone = "5583988896935";
+                const message = encodeURIComponent("Olá! Gostaria de agendar uma sessão no TSpa.");
+                window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+              }}
+              className="rounded-full gap-2 bg-green-600 hover:bg-green-700 border-green-700"
               data-testid="button-agendar-header"
             >
-              Agendar Consulta
+              <SiWhatsapp className="h-4 w-4" />
+              Agendar pelo WhatsApp
             </Button>
           </div>
 
@@ -117,11 +122,16 @@ export default function Header() {
               </button>
             ))}
             <Button
-              onClick={() => scrollToSection("#contato")}
-              className="mt-2 rounded-full"
+              onClick={() => {
+                const phone = "5583988896935";
+                const message = encodeURIComponent("Olá! Gostaria de agendar uma sessão no TSpa.");
+                window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+              }}
+              className="mt-2 rounded-full gap-2 bg-green-600 hover:bg-green-700 border-green-700"
               data-testid="button-agendar-mobile"
             >
-              Agendar Consulta
+              <SiWhatsapp className="h-4 w-4" />
+              Agendar pelo WhatsApp
             </Button>
           </nav>
         </div>

@@ -12,8 +12,8 @@ export default function HeroSection() {
   };
 
   const openWhatsApp = () => {
-    const phone = "5511999999999";
-    const message = encodeURIComponent("Olá! Gostaria de agendar uma consulta no Essence SPA.");
+    const phone = "5583988896935";
+    const message = encodeURIComponent("Olá! Gostaria de agendar uma sessão no TSpa.");
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
 

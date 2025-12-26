@@ -3,7 +3,6 @@ import HeroSection from "@/components/HeroSection";
 import AboutSection from "@/components/AboutSection";
 import ServicesSection from "@/components/ServicesSection";
 import LocationSection from "@/components/LocationSection";
-import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
@@ -16,7 +15,6 @@ export default function Home() {
         <AboutSection />
         <ServicesSection />
         <LocationSection />
-        <ContactSection />
       </main>
       <Footer />
       <WhatsAppButton />
