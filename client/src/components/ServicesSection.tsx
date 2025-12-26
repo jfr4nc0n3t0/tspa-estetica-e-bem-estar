@@ -5,7 +5,7 @@ import { Clock, Sparkles } from "lucide-react";
 import relaxingMassageImg from "@assets/stock_images/relaxing_back_massag_e4667eea.jpg";
 import drainageImg from "@assets/stock_images/lymphatic_drainage_m_f1921d3f.jpg";
 import modelingImg from "@assets/modeladora_1766783752585.jpeg";
-import therapeuticImg from "@assets/stock_images/therapeutic_massage__164be636.jpg";
+import therapeuticImg from "@assets/image_1766783818873.png";
 import cleansingImg from "@assets/stock_images/facial_cleansing_ski_d9bbf67e.jpg";
 import hydrationImg from "@assets/stock_images/facial_hydration_mas_2644cfa8.jpg";
 import clayMaskImg from "@assets/WhatsApp_Image_2025-12-26_at_18.12.46_1766783677163.jpeg";
