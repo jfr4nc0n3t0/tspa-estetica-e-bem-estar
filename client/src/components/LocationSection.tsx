@@ -1,9 +1,7 @@
 import { MapPin, Clock, Phone, Car } from "lucide-react";
 
 const businessHours = [
-  { day: "Segunda a Sexta", hours: "8h às 20h" },
-  { day: "Sábado", hours: "9h às 18h" },
-  { day: "Domingo", hours: "Fechado" },
+  { day: "Atendimento", hours: "Por agendamento" },
 ];
 
 export default function LocationSection() {
