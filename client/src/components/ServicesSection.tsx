@@ -6,7 +6,7 @@ import relaxingMassageImg from "@assets/image_1766783915313.png";
 import drainageImg from "@assets/image_1766783857869.png";
 import modelingImg from "@assets/modeladora_1766783752585.jpeg";
 import therapeuticImg from "@assets/image_1766783818873.png";
-import cleansingImg from "@assets/stock_images/facial_cleansing_ski_d9bbf67e.jpg";
+import cleansingImg from "@assets/limpeza_express.jpeg";
 import hydrationImg from "@assets/stock_images/facial_hydration_mas_2644cfa8.jpg";
 import clayMaskImg from "@assets/WhatsApp_Image_2025-12-26_at_18.12.46_1766783677163.jpeg";
 import packageImg from "@assets/stock_images/spa_wellness_package_e0a465e6.jpg";
