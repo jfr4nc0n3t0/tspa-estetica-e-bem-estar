@@ -67,7 +67,7 @@ const facialServices = [
   },
   {
     id: 3,
-    name: "Revitalização com Máscara de Argila",
+    name: "Revitalização com Máscara Iluminadora",
     duration: "30 min",
     description: "Auxilia no equilíbrio da pele, promove ação calmante e devolve luminosidade natural.",
     price: "R$ 65",
