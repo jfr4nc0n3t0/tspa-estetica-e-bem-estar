@@ -2,9 +2,8 @@ import { SiInstagram, SiFacebook, SiWhatsapp } from "react-icons/si";
 
 const quickLinks = [
   { label: "Sobre", href: "#sobre" },
-  { label: "Experiências", href: "#experiencias" },
+  { label: "Serviços", href: "#servicos" },
   { label: "Localização", href: "#localizacao" },
-  { label: "Contato", href: "#contato" },
 ];
 
 const socialLinks = [
