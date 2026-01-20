@@ -1,4 +1,4 @@
-import aboutImage from "@assets/thau_1766782638523.jpeg";
+import aboutImage from "@assets/WhatsApp_Image_2026-01-20_at_09.49.55_1768914009408.jpeg";
 
 export default function AboutSection() {
   return (
