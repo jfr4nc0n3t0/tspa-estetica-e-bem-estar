@@ -17,7 +17,6 @@ const massageServices = [
     name: "Massagem Relaxante",
     duration: "60 min",
     description: "Indicada para aliviar estresse, ansiedade e tensão muscular. Utiliza óleos aromáticos e manobras lentas, promovendo relaxamento profundo e bem-estar.",
-    price: "R$ 100",
     bonus: "inclui escalda pés",
     image: relaxingMassageImg,
   },
@@ -26,7 +25,6 @@ const massageServices = [
     name: "Drenagem Linfática",
     duration: "60 min",
     description: "Técnica com movimentos suaves e ritmados que auxiliam na redução de inchaço, retenção de líquidos e melhora da circulação.",
-    price: "R$ 120",
     image: drainageImg,
   },
   {
@@ -34,7 +32,6 @@ const massageServices = [
     name: "Massagem Modeladora",
     duration: "50 min",
     description: "Massagem com manobras mais intensas, focada em abdômen, cintura, coxas e glúteos, auxiliando na melhora do contorno corporal.",
-    price: "R$ 110",
     image: modelingImg,
   },
   {
@@ -42,7 +39,6 @@ const massageServices = [
     name: "Massagem Terapêutica / Liberação Miofascial",
     duration: "60 min",
     description: "Indicada para dores musculares, tensões crônicas e desconfortos nas costas, pescoço e lombar.",
-    price: "R$ 130",
     bonus: "inclui escalda pés",
     image: therapeuticImg,
   },
@@ -54,7 +50,6 @@ const facialServices = [
     name: "Limpeza de Pele Express",
     duration: "40 min",
     description: "Higienização profunda, esfoliação e aplicação de máscara revitalizante, deixando a pele mais limpa e renovada.",
-    price: "R$ 80",
     image: cleansingImg,
   },
   {
@@ -62,7 +57,6 @@ const facialServices = [
     name: "Hidratação Facial Profunda",
     duration: "30 min",
     description: "Tratamento indicado para peles secas ou opacas, devolvendo maciez, viço e conforto à pele.",
-    price: "R$ 70",
     image: hydrationImg,
   },
   {
@@ -70,7 +64,6 @@ const facialServices = [
     name: "Revitalização com Máscara Iluminadora",
     duration: "30 min",
     description: "Auxilia no equilíbrio da pele, promove ação calmante e devolve luminosidade natural.",
-    price: "R$ 65",
     image: clayMaskImg,
   },
 ];
@@ -82,7 +75,6 @@ const packages = [
     sessions: "2 sessões/mês",
     duration: "60 min cada",
     description: "Pode escolher entre massagem relaxante, drenagem linfática ou modeladora. (Não inclui massagem terapêutica)",
-    price: "R$ 190",
     highlight: false,
     image: relaxingMassageImg,
   },
@@ -92,7 +84,6 @@ const packages = [
     sessions: "4 sessões/mês",
     duration: "60 min cada",
     description: "Pode escolher entre massagem relaxante, drenagem linfática ou modeladora. (Não inclui massagem terapêutica)",
-    price: "R$ 320",
     highlight: true,
     image: drainageImg,
   },
@@ -102,7 +93,6 @@ const packages = [
     sessions: "12 sessões (3 meses)",
     duration: "60 min cada",
     description: "Pode escolher entre massagem relaxante, drenagem linfática ou modeladora. (Não inclui massagem terapêutica)",
-    price: "R$ 870",
     highlight: false,
     image: modelingImg,
   },
@@ -112,7 +102,6 @@ const packages = [
     sessions: "Massagem + Hidratação Facial",
     duration: "90 min total",
     description: "Massagem relaxante (60 min) + hidratação facial (30 min). Uma combinação para relaxar o corpo e cuidar da pele em uma única sessão.",
-    price: "R$ 140",
     highlight: true,
     image: packageImg,
   },
@@ -142,12 +131,9 @@ function ServiceCard({ service }: { service: typeof massageServices[0] }) {
             </Badge>
           )}
         </div>
-        <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+        <p className="text-muted-foreground text-sm leading-relaxed">
           {service.description}
         </p>
-        <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-primary">{service.price}</span>
-        </div>
       </div>
     </Card>
   );
@@ -185,12 +171,9 @@ function PackageCard({ pkg }: { pkg: typeof packages[0] }) {
             <span className="text-xs">{pkg.duration}</span>
           </div>
         </div>
-        <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+        <p className="text-muted-foreground text-sm leading-relaxed">
           {pkg.description}
         </p>
-        <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-primary">{pkg.price}</span>
-        </div>
       </div>
     </Card>
   );
