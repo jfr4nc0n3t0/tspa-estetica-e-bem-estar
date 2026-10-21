@@ -2,177 +2,278 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Sparkles } from "lucide-react";
 
-import relaxingMassageImg from "@assets/image_1766783915313.png";
-import drainageImg from "@assets/image_1766783857869.png";
-import modelingImg from "@assets/modeladora_1766783752585.jpeg";
-import therapeuticImg from "@assets/image_1766783818873.png";
-import cleansingImg from "@assets/limpeza_express.jpeg";
-import hydrationImg from "@assets/stock_images/facial_hydration_mas_2644cfa8.jpg";
-import clayMaskImg from "@assets/WhatsApp_Image_2025-12-26_at_18.12.46_1766783677163.jpeg";
-import packageImg from "@assets/stock_images/spa_wellness_package_e0a465e6.jpg";
+import relaxingMassageImg from "@assets/services/massagem-relaxante.jpg";
+import drainageImg from "@assets/services/drenagem-linfatica.jpg";
+import myofascialImg from "@assets/services/liberacao-miofascial.jpg";
+import hydrationImg from "@assets/services/hidratacao-facial.jpg";
+import cleansingImg from "@assets/services/limpeza-de-pele.jpg";
+import feetRitualImg from "@assets/services/ritual-dos-pes.jpg";
+import headSpaEssentialImg from "@assets/services/head-spa-essencial.jpg";
+import headSpaImmersionImg from "@assets/services/head-spa-imersao.jpg";
+import headSpaRitualImg from "@assets/services/head-spa-ritual.jpg";
+import lightnessRitualImg from "@assets/services/ritual-leveza.jpg";
+import renewedSkinRitualImg from "@assets/services/ritual-pele-renovada.jpg";
+import slowDownRitualImg from "@assets/services/ritual-desacelerar.jpg";
+import connectionRitualImg from "@assets/services/ritual-conexao.jpg";
+import tspaRitualImg from "@assets/services/ritual-tspa.jpg";
 
-const massageServices = [
+type Session = {
+  id: string;
+  name: string;
+  duration: string;
+  characteristic: string;
+  phrase: string;
+  image: string;
+  note?: string;
+};
+
+const massageServices: Session[] = [
   {
-    id: 1,
+    id: "massagem-relaxante",
     name: "Massagem Relaxante",
     duration: "60 min",
-    description: "Indicada para aliviar estresse, ansiedade e tensão muscular. Utiliza óleos aromáticos e manobras lentas, promovendo relaxamento profundo e bem-estar.",
-    bonus: "inclui escalda pés",
+    characteristic: "Movimentos suaves e envolventes",
+    phrase: "Uma pausa para o corpo e para a mente, que ajuda a aliviar as tensões do dia e proporciona relaxamento, leveza e bem-estar.",
     image: relaxingMassageImg,
   },
   {
-    id: 2,
+    id: "drenagem-linfatica",
     name: "Drenagem Linfática",
     duration: "60 min",
-    description: "Técnica com movimentos suaves e ritmados que auxiliam na redução de inchaço, retenção de líquidos e melhora da circulação.",
+    characteristic: "Cuidado delicado e específico",
+    phrase: "Movimentos suaves para uma experiência agradável de bem-estar e sensação de leveza.",
     image: drainageImg,
   },
   {
-    id: 3,
-    name: "Massagem Modeladora",
-    duration: "50 min",
-    description: "Massagem com manobras mais intensas, focada em abdômen, cintura, coxas e glúteos, auxiliando na melhora do contorno corporal.",
-    image: modelingImg,
-  },
-  {
-    id: 4,
-    name: "Massagem Terapêutica / Liberação Miofascial",
+    id: "liberacao-miofascial",
+    name: "Liberação Miofascial",
     duration: "60 min",
-    description: "Indicada para dores musculares, tensões crônicas e desconfortos nas costas, pescoço e lombar.",
-    bonus: "inclui escalda pés",
-    image: therapeuticImg,
+    characteristic: "Atenção às regiões de maior tensão",
+    phrase: "Técnicas manuais que favorecem a mobilidade, aliviam desconfortos e proporcionam sensação de liberdade ao corpo.",
+    image: myofascialImg,
   },
 ];
 
-const facialServices = [
+const facialServices: Session[] = [
   {
-    id: 1,
-    name: "Limpeza de Pele Express",
-    duration: "40 min",
-    description: "Higienização profunda, esfoliação e aplicação de máscara revitalizante, deixando a pele mais limpa e renovada.",
-    image: cleansingImg,
-  },
-  {
-    id: 2,
-    name: "Hidratação Facial Profunda",
-    duration: "30 min",
-    description: "Tratamento indicado para peles secas ou opacas, devolvendo maciez, viço e conforto à pele.",
+    id: "hidratacao-facial",
+    name: "Hidratação Facial",
+    duration: "50 min",
+    characteristic: "Viço, conforto e luminosidade",
+    phrase: "Cuidados selecionados ajudam a hidratar a pele e deixam uma aparência mais saudável e revitalizada.",
     image: hydrationImg,
   },
   {
-    id: 3,
-    name: "Revitalização com Máscara Iluminadora",
+    id: "limpeza-de-pele",
+    name: "Limpeza de Pele",
+    duration: "60 min",
+    characteristic: "Higienização e cuidado equilibrado",
+    phrase: "Um ritual para renovar a pele e recuperar sua aparência saudável, limpa e revitalizada.",
+    image: cleansingImg,
+  },
+];
+
+const feetRitual: Session[] = [
+  {
+    id: "ritual-dos-pes",
+    name: "Ritual dos Pés",
     duration: "30 min",
-    description: "Auxilia no equilíbrio da pele, promove ação calmante e devolve luminosidade natural.",
-    image: clayMaskImg,
+    characteristic: "Uma pausa acolhedora para os pés",
+    phrase: "Um ritual delicado para desacelerar, aliviar a sensação de cansaço e preparar o corpo para um momento de descanso.",
+    image: feetRitualImg,
+    note: "Disponível como complemento de outro serviço.",
   },
 ];
 
-const packages = [
+const headSpaServices: Session[] = [
   {
-    id: 1,
-    name: "Plano Quinzenal",
-    sessions: "2 sessões/mês",
-    duration: "60 min cada",
-    description: "Pode escolher entre massagem relaxante, drenagem linfática ou modeladora. (Não inclui massagem terapêutica)",
-    highlight: false,
-    image: relaxingMassageImg,
+    id: "head-spa-essencial",
+    name: "Head Spa Essencial",
+    duration: "30 min",
+    characteristic: "Para experimentar o Head Spa",
+    phrase: "Cuidados no couro cabeludo e movimentos relaxantes para simplesmente desligar.",
+    image: headSpaEssentialImg,
   },
   {
-    id: 2,
-    name: "Plano Mensal",
-    sessions: "4 sessões/mês",
-    duration: "60 min cada",
-    description: "Pode escolher entre massagem relaxante, drenagem linfática ou modeladora. (Não inclui massagem terapêutica)",
-    highlight: true,
-    image: drainageImg,
+    id: "head-spa-imersao",
+    name: "Head Spa Imersão",
+    duration: "45 min",
+    characteristic: "Cuidado da cabeça ao pescoço",
+    phrase: "Uma experiência ampliada para deixar a correria do lado de fora e aproveitar uma pausa mais completa.",
+    image: headSpaImmersionImg,
   },
   {
-    id: 3,
-    name: "Plano Trimestral",
-    sessions: "12 sessões (3 meses)",
-    duration: "60 min cada",
-    description: "Pode escolher entre massagem relaxante, drenagem linfática ou modeladora. (Não inclui massagem terapêutica)",
-    highlight: false,
-    image: modelingImg,
-  },
-  {
-    id: 4,
-    name: "Combo Bem-estar",
-    sessions: "Massagem + Hidratação Facial",
-    duration: "90 min total",
-    description: "Massagem relaxante (60 min) + hidratação facial (30 min). Uma combinação para relaxar o corpo e cuidar da pele em uma única sessão.",
-    highlight: true,
-    image: packageImg,
+    id: "head-spa-ritual",
+    name: "Head Spa Ritual",
+    duration: "60 min",
+    characteristic: "A experiência mais completa",
+    phrase: "Um ritual prolongado de cuidado e relaxamento para transformar o atendimento em uma verdadeira pausa da rotina.",
+    image: headSpaRitualImg,
   },
 ];
 
-function ServiceCard({ service }: { service: typeof massageServices[0] }) {
+const experiences = [
+  {
+    id: "ritual-leveza",
+    name: "Ritual Leveza",
+    combination: "Massagem Relaxante + Ritual dos Pés",
+    characteristic: "Relaxamento dos pés ao corpo",
+    phrase: "Comece pelos pés e termine com o corpo relaxado. Uma combinação para desacelerar, aliviar tensões e sair mais leve.",
+    image: lightnessRitualImg,
+  },
+  {
+    id: "ritual-pele-renovada",
+    name: "Ritual Pele Renovada",
+    combination: "Limpeza de Pele + Hidratação Facial",
+    characteristic: "Um cuidado facial completo",
+    phrase: "Um cuidado para renovar e devolver vitalidade à pele, transformando o tratamento facial em um momento de autocuidado.",
+    image: renewedSkinRitualImg,
+  },
+  {
+    id: "ritual-desacelerar",
+    name: "Ritual Desacelerar",
+    combination: "Head Spa Imersão + Ritual dos Pés",
+    characteristic: "Uma pausa da cabeça aos pés",
+    phrase: "Uma experiência sensorial que une acolhimento e descanso para ajudar você a diminuir o ritmo.",
+    image: slowDownRitualImg,
+  },
+  {
+    id: "ritual-conexao",
+    name: "Ritual Conexão",
+    combination: "Head Spa Imersão + Massagem Relaxante",
+    characteristic: "Relaxamento que continua pelo corpo",
+    phrase: "Uma experiência para se reconectar com você, começando pela cabeça e seguindo pelo corpo.",
+    image: connectionRitualImg,
+  },
+  {
+    id: "ritual-tspa",
+    name: "Ritual TSpa",
+    combination: "Head Spa Ritual + Massagem Relaxante + Ritual dos Pés",
+    characteristic: "A experiência TSpa mais completa",
+    phrase: "Uma jornada de relaxamento para quem deseja reservar um tempo exclusivamente para si.",
+    image: tspaRitualImg,
+  },
+];
+
+const plans = [
+  {
+    id: "pausa-tspa",
+    name: "Pausa TSpa",
+    cadence: "Mensal",
+    frequency: "1 atendimento por mês",
+    benefit: "5% de benefício",
+    phrase: "Um momento de cuidado para incluir na rotina, mês a mês.",
+  },
+  {
+    id: "ritmo-tspa",
+    name: "Ritmo TSpa",
+    cadence: "Quinzenal",
+    frequency: "2 atendimentos por mês",
+    benefit: "5% de benefício",
+    phrase: "Duas pausas no mês para cultivar o bem-estar com regularidade.",
+  },
+  {
+    id: "ciclo-tspa",
+    name: "Ciclo TSpa",
+    cadence: "Trimestral",
+    frequency: "1 atendimento por mês, durante 3 meses",
+    benefit: "8% de benefício",
+    phrase: "Um ciclo de cuidado contínuo, no seu ritmo.",
+  },
+  {
+    id: "essencia-tspa",
+    name: "Essência TSpa",
+    cadence: "Semestral",
+    frequency: "1 atendimento por mês, durante 6 meses",
+    benefit: "10% de benefício",
+    phrase: "Mais tempo para fazer do autocuidado parte da rotina.",
+  },
+];
+
+const categories = [
+  { id: "massagens", label: "Massagens" },
+  { id: "faciais", label: "Cuidados faciais" },
+  { id: "ritual-dos-pes", label: "Ritual dos pés" },
+  { id: "head-spa", label: "Head Spa" },
+  { id: "experiencias", label: "Experiências TSpa" },
+  { id: "planos", label: "Planos TSpa" },
+];
+
+function SectionHeading({
+  id,
+  title,
+  phrase,
+}: {
+  id: string;
+  title: string;
+  phrase: string;
+}) {
   return (
-    <Card className="overflow-hidden group" data-testid={`card-service-${service.id}`}>
-      <div className="relative h-48 overflow-hidden">
+    <div id={id} className="mb-8 scroll-mt-28">
+      <div className="flex items-center gap-3 mb-3">
+        <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
+        <h3 className="text-2xl font-serif font-bold text-foreground">{title}</h3>
+      </div>
+      <p className="pl-8 text-muted-foreground">{phrase}</p>
+    </div>
+  );
+}
+
+function SessionCard({ session }: { session: Session }) {
+  return (
+    <Card className="h-full overflow-hidden group flex flex-col" data-testid={`card-service-${session.id}`}>
+      <div className="relative h-44 overflow-hidden">
         <img
-          src={service.image}
-          alt={service.name}
+          src={session.image}
+          alt=""
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-4 left-4 right-4">
-          <h3 className="font-semibold text-white text-lg">{service.name}</h3>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        <div className="absolute right-3 top-3 z-50 inline-flex items-center gap-1.5 rounded-md border border-black/10 bg-white px-3 py-1.5 text-sm font-bold text-stone-900 shadow-lg">
+          <Clock className="h-4 w-4" aria-hidden="true" />
+          <span>{session.duration}</span>
         </div>
+        <h4 className="absolute bottom-4 left-4 right-4 font-semibold text-white text-lg leading-tight">
+          {session.name}
+        </h4>
       </div>
-      <div className="p-5">
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">{service.duration}</span>
-          {service.bonus && (
-            <Badge variant="secondary" className="text-xs">
-              {service.bonus}
-            </Badge>
-          )}
-        </div>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          {service.description}
+      <div className="flex flex-1 flex-col p-5">
+        <p className="text-xs font-medium uppercase tracking-widest text-primary">Característica</p>
+        <p className="mt-1 font-medium text-foreground">{session.characteristic}</p>
+        <p className="mt-4 border-l-2 border-primary/60 pl-3 text-sm leading-relaxed text-muted-foreground">
+          {session.phrase}
         </p>
+        {session.note && (
+          <p className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">
+            {session.note}
+          </p>
+        )}
       </div>
     </Card>
   );
 }
 
-function PackageCard({ pkg }: { pkg: typeof packages[0] }) {
+function ExperienceCard({ experience }: { experience: (typeof experiences)[number] }) {
   return (
-    <Card
-      className={`overflow-hidden group ${pkg.highlight ? "ring-2 ring-primary" : ""}`}
-      data-testid={`card-package-${pkg.id}`}
-    >
-      <div className="relative h-40 overflow-hidden">
+    <Card className="h-full overflow-hidden group flex flex-col" data-testid={`card-experience-${experience.id}`}>
+      <div className="relative h-44 overflow-hidden">
         <img
-          src={pkg.image}
-          alt={pkg.name}
+          src={experience.image}
+          alt=""
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-        {pkg.highlight && (
-          <Badge className="absolute top-3 right-3">
-            Popular
-          </Badge>
-        )}
-        <div className="absolute bottom-3 left-4 right-4">
-          <h3 className="font-semibold text-white text-lg">{pkg.name}</h3>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        <h4 className="absolute bottom-4 left-4 right-4 font-semibold text-white text-lg leading-tight">
+          {experience.name}
+        </h4>
       </div>
-      <div className="p-5">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <Badge variant="outline" className="text-xs">
-            {pkg.sessions}
-          </Badge>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            <span className="text-xs">{pkg.duration}</span>
-          </div>
-        </div>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          {pkg.description}
+      <div className="flex flex-1 flex-col p-5">
+        <p className="text-xs font-medium uppercase tracking-widest text-primary">Combina</p>
+        <p className="mt-1 text-sm font-medium text-foreground">{experience.combination}</p>
+        <p className="mt-4 text-xs font-medium uppercase tracking-widest text-primary">Característica</p>
+        <p className="mt-1 font-medium text-foreground">{experience.characteristic}</p>
+        <p className="mt-4 border-l-2 border-primary/60 pl-3 text-sm leading-relaxed text-muted-foreground">
+          {experience.phrase}
         </p>
       </div>
     </Card>
@@ -187,52 +288,85 @@ export default function ServicesSection() {
       data-testid="section-servicos"
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12">
           <span className="inline-block text-primary text-sm font-medium tracking-widest uppercase mb-4">
-            Nossos Serviços
+            Menu de experiências
           </span>
           <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-            Tratamentos Exclusivos
+            Seu tempo, vivido com presença.
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Oferecemos uma variedade de tratamentos para cuidar do seu corpo e mente.
+            Escolha um cuidado para desacelerar, cuidar de si e transformar alguns minutos do dia em uma experiência de bem-estar.
           </p>
         </div>
 
-        <div className="mb-20">
-          <div className="flex items-center gap-3 mb-8">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h3 className="text-2xl font-serif font-bold text-foreground">Massagens</h3>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {massageServices.map((service) => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
+        <nav aria-label="Categorias do menu de experiências" className="mb-16 flex flex-wrap justify-center gap-2">
+          {categories.map((category) => (
+            <a
+              key={category.id}
+              href={`#${category.id}`}
+              className="rounded-full border border-border px-4 py-2 text-sm text-foreground/80 transition-colors hover:border-primary hover:text-primary"
+            >
+              {category.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="mb-16">
+          <SectionHeading id="massagens" title="Massagens & Terapias" phrase="Cuidado que devolve leveza." />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {massageServices.map((session) => <SessionCard key={session.id} session={session} />)}
           </div>
         </div>
 
-        <div className="mb-20">
-          <div className="flex items-center gap-3 mb-8">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h3 className="text-2xl font-serif font-bold text-foreground">Tratamentos Faciais</h3>
-          </div>
+        <div className="mb-16">
+          <SectionHeading id="faciais" title="Cuidados Faciais" phrase="Pele cuidada. Tempo desacelerado." />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {facialServices.map((service) => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
+            {facialServices.map((session) => <SessionCard key={session.id} session={session} />)}
+          </div>
+        </div>
+
+        <div className="mb-16">
+          <SectionHeading id="ritual-dos-pes" title="Rituais" phrase="O descanso também pode começar pelos pés." />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {feetRitual.map((session) => <SessionCard key={session.id} session={session} />)}
+          </div>
+        </div>
+
+        <div className="mb-16">
+          <SectionHeading id="head-spa" title="Head Spa" phrase="Escolha o ritmo da sua pausa." />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {headSpaServices.map((session) => <SessionCard key={session.id} session={session} />)}
+          </div>
+        </div>
+
+        <div className="mb-16">
+          <SectionHeading id="experiencias" title="Experiências TSpa" phrase="Mais do que combinar serviços, criamos momentos para você aproveitar seu cuidado por completo." />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {experiences.map((experience) => <ExperienceCard key={experience.id} experience={experience} />)}
           </div>
         </div>
 
         <div>
-          <div className="flex items-center gap-3 mb-8">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h3 className="text-2xl font-serif font-bold text-foreground">Pacotes e Planos</h3>
-          </div>
+          <SectionHeading id="planos" title="Planos TSpa" phrase="Bem-estar também pode virar rotina. Escolha o seu ritmo." />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {packages.map((pkg) => (
-              <PackageCard key={pkg.id} pkg={pkg} />
+            {plans.map((plan) => (
+              <Card key={plan.id} className="h-full p-5" data-testid={`card-plan-${plan.id}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-widest text-primary">{plan.cadence}</p>
+                    <h4 className="mt-1 font-serif text-xl font-bold text-foreground">{plan.name}</h4>
+                  </div>
+                  <Badge variant="secondary" className="shrink-0">{plan.benefit}</Badge>
+                </div>
+                <p className="mt-5 font-medium text-foreground">{plan.frequency}</p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{plan.phrase}</p>
+              </Card>
             ))}
           </div>
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Condições e valores finais são apresentados no momento da contratação.
+          </p>
         </div>
       </div>
     </section>

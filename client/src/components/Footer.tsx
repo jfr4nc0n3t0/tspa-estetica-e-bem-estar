@@ -1,4 +1,4 @@
-import { SiInstagram, SiFacebook, SiWhatsapp } from "react-icons/si";
+import { SiInstagram, SiWhatsapp } from "react-icons/si";
 
 const quickLinks = [
   { label: "Sobre", href: "#sobre" },
@@ -9,13 +9,8 @@ const quickLinks = [
 const socialLinks = [
   {
     label: "Instagram",
-    href: "https://instagram.com/tspa.estetica",
+    href: "https://instagram.com/tspa.jp",
     icon: SiInstagram,
-  },
-  {
-    label: "Facebook",
-    href: "https://facebook.com/tspa.estetica",
-    icon: SiFacebook,
   },
   {
     label: "WhatsApp",
@@ -39,15 +34,14 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <span className="font-serif text-2xl font-bold text-foreground">
-                TSpa
+                tspa
               </span>
               <span className="font-serif text-lg font-light text-primary">
-                Estética e Bem-Estar
+                Refúgio do Corpo e da Alma
               </span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Fisioterapia e bem-estar em perfeita harmonia. 
-              Cuidamos do seu corpo e mente com tratamentos exclusivos.
+              Refúgio do Corpo e da Alma com tratamentos exclusivos.
             </p>
           </div>
 
@@ -92,7 +86,7 @@ export default function Footer() {
         </div>
 
         <div className="py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} TSpa Estética e Bem-Estar. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} tspa Refúgio do Corpo e da Alma. Todos os direitos reservados.</p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <a href="#" className="hover:text-primary transition-colors">
               Política de Privacidade

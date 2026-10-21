@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
+import logoImage from "@assets/tspa_refugio_mark.png";
 
 const navItems = [
   { label: "Início", href: "#inicio" },
@@ -50,22 +51,11 @@ export default function Header() {
             className="flex items-center gap-2"
             data-testid="link-logo"
           >
-            <div className="flex flex-col">
-              <span
-                className={`font-serif text-xl md:text-2xl font-bold tracking-tight leading-tight ${
-                  isScrolled ? "text-foreground" : "text-white"
-                }`}
-              >
-                TSpa
-              </span>
-              <span
-                className={`text-xs md:text-sm font-light leading-tight ${
-                  isScrolled ? "text-primary" : "text-white/80"
-                }`}
-              >
-                Fisioterapia e Bem-Estar
-              </span>
-            </div>
+            <img
+              src={logoImage}
+              alt="TSpa"
+              className={`h-auto w-16 md:w-20 ${isScrolled ? "" : "brightness-0 invert"}`}
+            />
           </a>
 
           <nav

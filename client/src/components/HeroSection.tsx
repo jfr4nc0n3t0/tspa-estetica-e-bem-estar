@@ -24,22 +24,21 @@ export default function HeroSection() {
       data-testid="section-hero"
     >
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="hero-background-motion absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${heroImage})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 md:px-6 lg:px-8 text-center">
-        <span className="inline-block text-white/80 text-sm md:text-base font-medium tracking-widest uppercase mb-4 md:mb-6">
-          Fisioterapia & Bem-Estar
+        <span className="inline-block text-white/80 text-sm md:text-base font-medium tracking-widest mb-4 md:mb-6">
+          Refúgio do Corpo e da Alma
         </span>
         <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-6">
           Descubra a Arte do<br />
           <span className="text-primary-foreground">Equilíbrio e Relaxamento</span>
         </h1>
         <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed">
-          Experiências exclusivas de fisioterapia e SPA que combinam técnicas terapêuticas 
-          com tratamentos relaxantes para restaurar seu corpo e mente.
+          Um espaço de bem-estar com massagens, cuidados estéticos e momentos de relaxamento para você se reconectar consigo.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

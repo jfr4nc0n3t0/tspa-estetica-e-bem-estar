@@ -28,7 +28,7 @@ export default function LocationSection() {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
           <div className="aspect-square md:aspect-video lg:aspect-square rounded-2xl overflow-hidden shadow-lg">
             <iframe
-              src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=R.+Enfermeira+Ana+Maria+Barbosa,+1109,+Jardim+Cidade+Universitária,+João+Pessoa,+PB,+58052-270,+Brazil&zoom=16"
+              src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=R.+Mírian+Barreto+Rabelo,+135,+Jardim+Oceania,+João+Pessoa,+PB,+58037-195,+Brazil&zoom=16"
               width="100%"
               height="100%"
               style={{ border: 0 }}
@@ -49,11 +49,11 @@ export default function LocationSection() {
                   Endereço
                 </h3>
                 <p className="text-muted-foreground">
-                  R. Enfermeira Ana Maria Barbosa, 1109
+                  R. Mírian Barreto Rabelo, 135
                   <br />
-                  J. Cidade Universitária, João Pessoa - PB
+                  Jardim Oceania, João Pessoa - PB
                   <br />
-                  CEP: 58052-270
+                  CEP: 58037-195
                 </p>
               </div>
             </div>

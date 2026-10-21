@@ -175,6 +175,30 @@
   }
 }
 
+@keyframes hero-background-drift {
+  from {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: scale(1.12) translate3d(-0.6%, -0.4%, 0);
+  }
+}
+
+.hero-background-motion {
+  filter: blur(3px) brightness(0.8);
+  animation: hero-background-drift 32s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-background-motion {
+    animation: none;
+    transform: scale(1.08);
+    will-change: auto;
+  }
+}
+
 /**
  * Using the elevate system.
  * Automatic contrast adjustment.
