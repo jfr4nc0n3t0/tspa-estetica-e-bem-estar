@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
@@ -14,16 +14,24 @@ const navItems = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      const aboutSection = document.getElementById("sobre");
+      const headerBottom = headerRef.current?.getBoundingClientRect().bottom ?? 80;
+      setIsScrolled(
+        Boolean(aboutSection && aboutSection.getBoundingClientRect().top <= headerBottom),
+      );
     };
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToSection = (href: string) => {
+    if (document.documentElement.dataset.heroRevealLocked === "true") return;
+
     const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
@@ -33,6 +41,7 @@ export default function Header() {
 
   return (
     <header
+      ref={headerRef}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
           ? "bg-background/95 backdrop-blur-lg shadow-sm border-b border-border"

@@ -191,11 +191,35 @@
   will-change: transform;
 }
 
+.hero-copy-item {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition: opacity 600ms ease, transform 600ms ease;
+  will-change: opacity, transform;
+}
+
+.hero-copy-item-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-background-motion {
     animation: none;
     transform: scale(1.08);
     will-change: auto;
+  }
+
+  .hero-copy-item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+
+  .hero-copy-item-visible {
+    opacity: 1;
+    transform: none;
   }
 }
 

@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Sparkles } from "lucide-react";
+import { Clock, ChevronLeft, ChevronRight, Pause, Play, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import relaxingMassageImg from "@assets/services/massagem-relaxante.jpg";
 import drainageImg from "@assets/services/drenagem-linfatica.jpg";
@@ -16,6 +17,11 @@ import renewedSkinRitualImg from "@assets/services/ritual-pele-renovada.jpg";
 import slowDownRitualImg from "@assets/services/ritual-desacelerar.jpg";
 import connectionRitualImg from "@assets/services/ritual-conexao.jpg";
 import tspaRitualImg from "@assets/services/ritual-tspa.jpg";
+import relaxingMassageGallery1 from "@assets/services/massagem-relaxante/01.jpg";
+import relaxingMassageGallery2 from "@assets/services/massagem-relaxante/02.jpg";
+import cleansingGallery1 from "@assets/services/limpeza-de-pele/01.jpg";
+import cleansingGallery2 from "@assets/services/limpeza-de-pele/02.jpg";
+import cleansingGallery3 from "@assets/services/limpeza-de-pele/03.jpg";
 
 type Session = {
   id: string;
@@ -24,6 +30,7 @@ type Session = {
   characteristic: string;
   phrase: string;
   image: string;
+  gallery?: string[];
   note?: string;
 };
 
@@ -35,6 +42,7 @@ const massageServices: Session[] = [
     characteristic: "Movimentos suaves e envolventes",
     phrase: "Uma pausa para o corpo e para a mente, que ajuda a aliviar as tensões do dia e proporciona relaxamento, leveza e bem-estar.",
     image: relaxingMassageImg,
+    gallery: [relaxingMassageGallery1, relaxingMassageGallery2],
   },
   {
     id: "drenagem-linfatica",
@@ -70,6 +78,7 @@ const facialServices: Session[] = [
     characteristic: "Higienização e cuidado equilibrado",
     phrase: "Um ritual para renovar a pele e recuperar sua aparência saudável, limpa e revitalizada.",
     image: cleansingImg,
+    gallery: [cleansingGallery1, cleansingGallery2, cleansingGallery3],
   },
 ];
 
@@ -220,20 +229,74 @@ function SectionHeading({
 }
 
 function SessionCard({ session }: { session: Session }) {
+  const [activeImage, setActiveImage] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const images = session.gallery ?? [session.image];
+
+  useEffect(() => {
+    if (images.length < 2 || !isAutoPlaying) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setActiveImage((current) => (current + 1) % images.length);
+    }, 5000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [activeImage, images.length, isAutoPlaying]);
+
   return (
     <Card className="h-full overflow-hidden group flex flex-col" data-testid={`card-service-${session.id}`}>
-      <div className="relative h-44 overflow-hidden">
+      <div className="relative aspect-video overflow-hidden bg-muted">
         <img
-          src={session.image}
+          src={images[activeImage]}
           alt=""
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              aria-label={`${isAutoPlaying ? "Pausar" : "Retomar"} troca automática de imagens de ${session.name}`}
+              onClick={() => setIsAutoPlaying((isPlaying) => !isPlaying)}
+              className="absolute left-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              {isAutoPlaying ? <Pause className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
+            </button>
+            <button
+              type="button"
+              aria-label={`Imagem anterior de ${session.name}`}
+              onClick={() => setActiveImage((current) => (current - 1 + images.length) % images.length)}
+              className="absolute left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label={`Próxima imagem de ${session.name}`}
+              onClick={() => setActiveImage((current) => (current + 1) % images.length)}
+              className="absolute right-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5" aria-label={`Imagem ${activeImage + 1} de ${images.length}`}>
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  aria-label={`Mostrar imagem ${index + 1} de ${session.name}`}
+                  aria-current={activeImage === index ? "true" : undefined}
+                  onClick={() => setActiveImage(index)}
+                  className={`h-2 w-2 rounded-full ring-1 ring-white/80 transition-colors ${activeImage === index ? "bg-white" : "bg-white/40 hover:bg-white/75"}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
         <div className="absolute right-3 top-3 z-50 inline-flex items-center gap-1.5 rounded-md border border-black/10 bg-white px-3 py-1.5 text-sm font-bold text-stone-900 shadow-lg">
           <Clock className="h-4 w-4" aria-hidden="true" />
           <span>{session.duration}</span>
         </div>
-        <h4 className="absolute bottom-4 left-4 right-4 font-semibold text-white text-lg leading-tight">
+        <h4 className={`absolute left-4 right-4 font-semibold text-white text-lg leading-tight ${images.length > 1 ? "bottom-8" : "bottom-4"}`}>
           {session.name}
         </h4>
       </div>
@@ -255,12 +318,12 @@ function SessionCard({ session }: { session: Session }) {
 
 function ExperienceCard({ experience }: { experience: (typeof experiences)[number] }) {
   return (
-    <Card className="h-full overflow-hidden group flex flex-col" data-testid={`card-experience-${experience.id}`}>
-      <div className="relative h-44 overflow-hidden">
+    <Card className="h-full overflow-hidden flex flex-col" data-testid={`card-experience-${experience.id}`}>
+      <div className="relative aspect-video overflow-hidden bg-muted">
         <img
           src={experience.image}
           alt=""
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <h4 className="absolute bottom-4 left-4 right-4 font-semibold text-white text-lg leading-tight">
@@ -314,42 +377,42 @@ export default function ServicesSection() {
 
         <div className="mb-16">
           <SectionHeading id="massagens" title="Massagens & Terapias" phrase="Cuidado que devolve leveza." />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid auto-rows-fr gap-6 md:grid-cols-2 lg:grid-cols-3">
             {massageServices.map((session) => <SessionCard key={session.id} session={session} />)}
           </div>
         </div>
 
         <div className="mb-16">
           <SectionHeading id="faciais" title="Cuidados Faciais" phrase="Pele cuidada. Tempo desacelerado." />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid auto-rows-fr gap-6 md:grid-cols-2 lg:grid-cols-3">
             {facialServices.map((session) => <SessionCard key={session.id} session={session} />)}
           </div>
         </div>
 
         <div className="mb-16">
           <SectionHeading id="ritual-dos-pes" title="Rituais" phrase="O descanso também pode começar pelos pés." />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid auto-rows-fr gap-6 md:grid-cols-2 lg:grid-cols-3">
             {feetRitual.map((session) => <SessionCard key={session.id} session={session} />)}
           </div>
         </div>
 
         <div className="mb-16">
           <SectionHeading id="head-spa" title="Head Spa" phrase="Escolha o ritmo da sua pausa." />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid auto-rows-fr gap-6 md:grid-cols-2 lg:grid-cols-3">
             {headSpaServices.map((session) => <SessionCard key={session.id} session={session} />)}
           </div>
         </div>
 
         <div className="mb-16">
           <SectionHeading id="experiencias" title="Experiências TSpa" phrase="Mais do que combinar serviços, criamos momentos para você aproveitar seu cuidado por completo." />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid auto-rows-fr gap-6 md:grid-cols-2 lg:grid-cols-3">
             {experiences.map((experience) => <ExperienceCard key={experience.id} experience={experience} />)}
           </div>
         </div>
 
         <div>
           <SectionHeading id="planos" title="Planos TSpa" phrase="Bem-estar também pode virar rotina. Escolha o seu ritmo." />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid auto-rows-fr gap-6 md:grid-cols-2 lg:grid-cols-4">
             {plans.map((plan) => (
               <Card key={plan.id} className="h-full p-5" data-testid={`card-plan-${plan.id}`}>
                 <div className="flex items-start justify-between gap-3">

@@ -1,6 +1,6 @@
 # Imagens do menu de serviços
 
-As fotos abaixo foram baixadas do Pexels e renomeadas conforme o serviço ou a experiência em que aparecem no site. O Pexels permite uso gratuito em sites comerciais; crédito não é obrigatório, mas mantive os créditos e páginas de origem para referência. As fotos são ilustrativas e não representam depoimentos ou endosso dos modelos.
+As fotos do Pexels abaixo foram renomeadas conforme o serviço ou a experiência em que aparecem no site. O Pexels permite uso gratuito em sites comerciais; crédito não é obrigatório, mas mantive os créditos e páginas de origem para referência. As fotos são ilustrativas e não representam depoimentos ou endosso dos modelos.
 
 | Arquivo local | Crédito | Página original |
 | --- | --- | --- |
@@ -20,3 +20,13 @@ As fotos abaixo foram baixadas do Pexels e renomeadas conforme o serviço ou a e
 | `ritual-tspa.jpg` | Jonathan Borba | [Physiotherapist Rubbing Someone's Foot](https://www.pexels.com/photo/physiotherapist-rubbing-someones-foot-19695973/) |
 
 Licença: [Pexels License](https://www.pexels.com/license/).
+
+## Imagens fornecidas pelo proprietário do site
+
+| Arquivo local | Origem |
+| --- | --- |
+| `massagem-relaxante/01.jpg` | `Downloads/Site/massagem_relaxante_1.jpg` |
+| `massagem-relaxante/02.jpg` | `Downloads/Site/massagem_relaxante_2.jpg` |
+| `limpeza-de-pele/01.jpg` | `Downloads/Site/limpeza_de_pele_1.jpg` |
+| `limpeza-de-pele/02.jpg` | `Downloads/Site/limpeza_de_pele_2.jpg` |
+| `limpeza-de-pele/03.jpg` | `Downloads/Site/limpeza_de_pele_3.jpg` |
