@@ -201,7 +201,7 @@ export default function HeroSection() {
     <section
       ref={sectionRef}
       id="inicio"
-      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-4 pb-16 pt-20 sm:px-6"
+      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-stone-950 px-4 pb-16 pt-20 sm:px-6"
       data-testid="section-hero"
     >
       <div
@@ -226,7 +226,6 @@ export default function HeroSection() {
           muted
           playsInline
           preload={hasWideScreen ? "auto" : "none"}
-          poster={hasWideScreen ? heroImage : undefined}
           onTimeUpdate={() => crossfadeToNextVideo(videoIndex)}
           onEnded={() => crossfadeToNextVideo(videoIndex, true)}
           aria-hidden="true"
@@ -237,13 +236,13 @@ export default function HeroSection() {
       ))}
       <div className="relative z-10 mx-auto max-w-5xl text-center">
         <span
-          className={getRevealClassName("mb-4 inline-block text-sm font-medium tracking-widest text-white/90 drop-shadow-md sm:mb-6 sm:text-base")}
+          className={getRevealClassName("mb-5 inline-block text-sm font-medium tracking-widest text-white/90 drop-shadow-md sm:mb-6 sm:text-base")}
           style={getRevealStyle(0)}
         >
           Refúgio do Corpo e da Alma
         </span>
         <h1
-          className={getRevealClassName("mb-6 font-serif text-3xl font-bold leading-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.75)] sm:text-5xl lg:text-6xl xl:text-7xl")}
+          className={getRevealClassName("mb-7 font-serif text-3xl font-bold leading-snug text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.75)] sm:mb-6 sm:leading-tight sm:text-5xl lg:text-6xl xl:text-7xl")}
           style={getRevealStyle(1)}
         >
           Seu momento de equilíbrio<br className="hidden sm:block" />
