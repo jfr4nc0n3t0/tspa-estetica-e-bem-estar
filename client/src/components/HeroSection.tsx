@@ -245,7 +245,7 @@ export default function HeroSection() {
           className={getRevealClassName("mb-7 font-serif text-3xl font-bold leading-snug text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.75)] sm:mb-6 sm:leading-tight sm:text-5xl lg:text-6xl xl:text-7xl")}
           style={getRevealStyle(1)}
         >
-          Seu momento de equilíbrio<br className="hidden sm:block" />
+          Seu momento de equilíbrio<br />
           <span className="text-primary-foreground">começa aqui</span>
         </h1>
         <p
