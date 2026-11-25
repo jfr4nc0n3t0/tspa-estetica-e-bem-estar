@@ -104,7 +104,9 @@ export default function ServicesSection() {
             <TabsContent
               key={category.id}
               value={category.id}
-              className="mt-10 data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:duration-500"
+              // Keep every tab in the HTML so search engines index all services; inactive tabs are just hidden.
+              forceMount
+              className="mt-10 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:duration-500"
             >
               <p className="mx-auto max-w-xl text-center font-serif text-xl italic text-foreground/80 md:text-2xl">
                 {category.intro}

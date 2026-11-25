@@ -25,11 +25,15 @@ export default function HeroSection() {
       className="relative flex min-h-[100svh] items-end overflow-hidden bg-forest md:items-center"
       data-testid="section-hero"
     >
-      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div className="absolute inset-0 overflow-hidden">
         <img
           src={heroImage}
-          alt=""
+          alt="Cliente relaxando durante uma sessão de Head Spa no TSpa, em João Pessoa"
+          width={1920}
+          height={1080}
           loading="eager"
+          decoding="async"
+          {...{ fetchpriority: "high" }}
           className="hero-photo h-full w-full object-cover object-[68%_center]"
         />
       </div>

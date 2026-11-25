@@ -45,7 +45,7 @@ export default function PlansSection() {
                     {plan.phrase}
                   </p>
                   <a
-                    href={whatsappUrl(bookingMessage(`plano ${plan.name}`))}
+                    href={whatsappUrl(bookingMessage(plan.name, "plano"))}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`mt-auto pt-7 text-sm font-medium underline-offset-4 hover:underline ${featured ? "" : "text-primary"}`}

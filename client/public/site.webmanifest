@@ -1,0 +1,14 @@
+{
+  "name": "TSpa · Refúgio do Corpo e da Alma",
+  "short_name": "TSpa",
+  "description": "Head Spa, massagens e cuidados faciais em João Pessoa.",
+  "start_url": "/",
+  "display": "browser",
+  "lang": "pt-BR",
+  "background_color": "#F4F1ED",
+  "theme_color": "#F4F1ED",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

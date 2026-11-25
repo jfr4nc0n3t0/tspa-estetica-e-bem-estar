@@ -19,6 +19,7 @@ export default function LocationSection() {
               description="Seu corpo também merece descanso. Um espaço tranquilo e de fácil acesso, pronto para receber você."
             />
 
+            <address className="not-italic">
             <ul className="mt-10 space-y-6">
               <li className="flex gap-4">
                 <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-taupe" strokeWidth={1.6} aria-hidden="true" />
@@ -49,6 +50,7 @@ export default function LocationSection() {
                 </a>
               </li>
             </ul>
+            </address>
 
             <a
               href={whatsappUrl()}

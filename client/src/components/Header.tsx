@@ -50,7 +50,7 @@ export default function Header() {
           />
         </a>
 
-        <nav className="hidden items-center gap-1 md:flex" data-testid="nav-desktop">
+        <nav aria-label="Principal" className="hidden items-center gap-1 md:flex" data-testid="nav-desktop">
           {navItems.map((item) => (
             <a
               key={item.href}
@@ -99,7 +99,7 @@ export default function Header() {
           className="h-[calc(100svh-4rem)] overflow-y-auto bg-background px-6 pb-10 pt-6 md:hidden"
           data-testid="nav-mobile"
         >
-          <nav className="flex flex-col">
+          <nav aria-label="Menu" className="flex flex-col">
             {navItems.map((item) => (
               <a
                 key={item.href}

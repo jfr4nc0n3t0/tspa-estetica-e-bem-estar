@@ -40,8 +40,9 @@ export default function PhotoCarousel({
         <img
           key={src}
           src={src}
-          alt=""
+          alt={index === 0 ? `${label} no TSpa, em João Pessoa` : ""}
           loading="lazy"
+          decoding="async"
           className={`absolute inset-0 h-full w-full object-cover transition-all duration-[1200ms] group-hover/carousel:scale-[1.03] ${
             index === active ? "opacity-100" : "opacity-0"
           }`}

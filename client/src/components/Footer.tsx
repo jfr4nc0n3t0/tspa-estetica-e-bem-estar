@@ -39,7 +39,7 @@ export default function Footer() {
               <SiWhatsapp className="h-4 w-4" />
             </a>
           </div>
-          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.2em]">
+          <nav aria-label="Rodapé" className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.2em]">
             {links.map((link) => (
               <a key={link.href} href={link.href} className="transition hover:text-white">
                 {link.label}

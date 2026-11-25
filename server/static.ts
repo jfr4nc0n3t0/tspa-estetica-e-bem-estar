@@ -12,8 +12,9 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
+  // Only "/" exists; any other path gets a real 404 status (the client renders the not-found page).
+  app.use("*", (req, res) => {
+    if (req.originalUrl.split("?")[0] !== "/") res.status(404);
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
