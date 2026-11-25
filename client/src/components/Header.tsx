@@ -1,156 +1,127 @@
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import logoImage from "@assets/tspa_refugio_mark.png";
+import { whatsappUrl } from "@/lib/contact";
 
 const navItems = [
-  { label: "Início", href: "#inicio" },
   { label: "Sobre", href: "#sobre" },
-  { label: "Serviços", href: "#servicos" },
-  { label: "Localização", href: "#localizacao" },
+  { label: "Cuidados", href: "#servicos" },
+  { label: "Experiências", href: "#experiencias" },
+  { label: "Planos", href: "#planos" },
+  { label: "Visite", href: "#localizacao" },
 ];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const headerRef = useRef<HTMLElement>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const aboutSection = document.getElementById("sobre");
-      const headerBottom = headerRef.current?.getBoundingClientRect().bottom ?? 80;
-      setIsScrolled(
-        Boolean(aboutSection && aboutSection.getBoundingClientRect().top <= headerBottom),
-      );
-    };
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setIsScrolled(window.scrollY > 60);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const scrollToSection = (href: string) => {
-    if (document.documentElement.dataset.heroRevealLocked === "true") return;
+  useEffect(() => {
+    document.body.style.overflow = isMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMenuOpen]);
 
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-    setIsMobileMenuOpen(false);
-  };
+  const solid = isScrolled || isMenuOpen;
 
   return (
     <header
-      ref={headerRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-background/95 backdrop-blur-lg shadow-sm border-b border-border"
-          : "bg-transparent"
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+        solid
+          ? "border-b border-border/70 bg-background/90 shadow-[0_8px_30px_-20px_rgba(60,40,20,0.35)] backdrop-blur-xl"
+          : "bg-gradient-to-b from-black/30 to-transparent"
       }`}
       data-testid="header"
     >
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4 h-16 md:h-20">
-          <a
-            href="#inicio"
-            onClick={(e) => {
-              e.preventDefault();
-              scrollToSection("#inicio");
-            }}
-            className="flex items-center gap-2"
-            data-testid="link-logo"
-          >
-            <img
-              src={logoImage}
-              alt="TSpa"
-              className={`h-auto w-16 md:w-20 ${isScrolled ? "" : "brightness-0 invert"}`}
-            />
-          </a>
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 md:h-20 md:px-8">
+        <a href="#inicio" className="flex items-center" data-testid="link-logo" onClick={() => setIsMenuOpen(false)}>
+          <img
+            src={logoImage}
+            alt="TSpa — Refúgio do Corpo e da Alma"
+            className={`h-auto w-16 transition md:w-20 ${solid ? "" : "brightness-0 invert"}`}
+          />
+        </a>
 
-          <nav
-            className="hidden md:flex items-center gap-1 flex-wrap"
-            data-testid="nav-desktop"
-          >
-            {navItems.map((item) => (
-              <button
-                key={item.href}
-                onClick={() => scrollToSection(item.href)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors hover-elevate ${
-                  isScrolled
-                    ? "text-foreground/80 hover:text-foreground"
-                    : "text-white/90 hover:text-white"
-                }`}
-                data-testid={`link-nav-${item.label.toLowerCase()}`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="hidden md:flex items-center gap-3">
-            <Button
-              onClick={() => {
-                const phone = "5583988896935";
-                const message = encodeURIComponent(
-                  "Olá! Gostaria de agendar uma sessão no TSpa.",
-                );
-                window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-              }}
-              className="rounded-full gap-2 bg-green-600 hover:bg-green-700 border-green-700"
-              data-testid="button-agendar-header"
+        <nav className="hidden items-center gap-1 md:flex" data-testid="nav-desktop">
+          {navItems.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className={`rounded-full px-4 py-2 text-[0.8rem] font-medium uppercase tracking-[0.18em] transition-colors ${
+                solid ? "text-foreground/70 hover:text-primary" : "text-white/85 hover:text-white"
+              }`}
+              data-testid={`link-nav-${item.label.toLowerCase()}`}
             >
-              <SiWhatsapp className="h-4 w-4" />
-              Agendar pelo WhatsApp
-            </Button>
-          </div>
+              {item.label}
+            </a>
+          ))}
+        </nav>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`md:hidden ${isScrolled ? "" : "text-white hover:bg-white/10"}`}
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            data-testid="button-mobile-menu"
-          >
-            {isMobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
+        <a
+          href={whatsappUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition md:inline-flex ${
+            solid
+              ? "bg-primary text-primary-foreground hover:bg-forest"
+              : "border border-white/40 text-white hover:bg-white/10"
+          }`}
+          data-testid="button-agendar-header"
+        >
+          <SiWhatsapp className="h-4 w-4" aria-hidden="true" />
+          Agendar
+        </a>
+
+        <button
+          type="button"
+          className={`grid h-10 w-10 place-items-center rounded-full md:hidden ${
+            solid ? "text-foreground" : "text-white"
+          }`}
+          onClick={() => setIsMenuOpen((open) => !open)}
+          aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
+          aria-expanded={isMenuOpen}
+          data-testid="button-mobile-menu"
+        >
+          {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </div>
 
-      {isMobileMenuOpen && (
+      {isMenuOpen && (
         <div
-          className="md:hidden bg-background border-t border-border"
+          className="h-[calc(100svh-4rem)] overflow-y-auto bg-background px-6 pb-10 pt-6 md:hidden"
           data-testid="nav-mobile"
         >
-          <nav className="flex flex-col p-4 gap-1">
+          <nav className="flex flex-col">
             {navItems.map((item) => (
-              <button
+              <a
                 key={item.href}
-                onClick={() => scrollToSection(item.href)}
-                className="px-4 py-3 text-left text-foreground/80 hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                href={item.href}
+                onClick={() => setIsMenuOpen(false)}
+                className="border-b border-border/70 py-4 font-serif text-3xl text-foreground"
                 data-testid={`link-mobile-${item.label.toLowerCase()}`}
               >
                 {item.label}
-              </button>
+              </a>
             ))}
-            <Button
-              onClick={() => {
-                const phone = "5583988896935";
-                const message = encodeURIComponent(
-                  "Olá! Gostaria de agendar uma sessão no TSpa.",
-                );
-                window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-              }}
-              className="mt-2 rounded-full gap-2 bg-green-600 hover:bg-green-700 border-green-700"
-              data-testid="button-agendar-mobile"
-            >
-              <SiWhatsapp className="h-4 w-4" />
-              Agendar pelo WhatsApp
-            </Button>
           </nav>
+          <a
+            href={whatsappUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-8 flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 font-medium text-primary-foreground"
+            data-testid="button-agendar-mobile"
+          >
+            <SiWhatsapp className="h-4 w-4" aria-hidden="true" />
+            Agendar pelo WhatsApp
+          </a>
         </div>
       )}
     </header>

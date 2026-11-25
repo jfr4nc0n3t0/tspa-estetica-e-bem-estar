@@ -5,3 +5,7 @@ server/public
 vite.config.ts.*
 *.tar.gz
 .env.local
+node_modules.nosync
+node_modules_trash
+*.heic
+marketing/

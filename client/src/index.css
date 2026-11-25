@@ -9,44 +9,44 @@
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
-  --background: 0 0% 100%;
-  --foreground: 0 0% 9%;
-  --border: 0 0% 91%;
-  --card: 0 0% 98%;
-  --card-foreground: 0 0% 9%;
-  --card-border: 0 0% 95%;
+  --background: 34 24% 94%;
+  --foreground: 40 2% 27%;
+  --border: 37 16% 82%;
+  --card: 34 30% 97%;
+  --card-foreground: 40 2% 27%;
+  --card-border: 37 16% 85%;
   --sidebar: 0 0% 96%;
   --sidebar-foreground: 0 0% 9%;
   --sidebar-border: 0 0% 93%;
-  --sidebar-primary: 160 55% 42%;
+  --sidebar-primary: 58 16% 35%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 220 45% 92%;
   --sidebar-accent-foreground: 220 50% 20%;
-  --sidebar-ring: 160 55% 42%;
-  --popover: 0 0% 94%;
-  --popover-foreground: 0 0% 9%;
-  --popover-border: 0 0% 91%;
-  --primary: 160 55% 42%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 30% 92%;
-  --secondary-foreground: 220 50% 20%;
-  --muted: 220 15% 92%;
-  --muted-foreground: 220 15% 40%;
-  --accent: 220 25% 94%;
-  --accent-foreground: 220 50% 20%;
+  --sidebar-ring: 58 16% 35%;
+  --popover: 34 30% 97%;
+  --popover-foreground: 40 2% 27%;
+  --popover-border: 37 16% 82%;
+  --primary: 58 16% 35%;
+  --primary-foreground: 34 30% 97%;
+  --secondary: 33 17% 87%;
+  --secondary-foreground: 40 2% 27%;
+  --muted: 33 17% 87%;
+  --muted-foreground: 35 12% 35%;
+  --accent: 37 16% 75%;
+  --accent-foreground: 35 38% 27%;
   --destructive: 0 72% 32%;
   --destructive-foreground: 0 72% 97%;
-  --input: 0 0% 75%;
-  --ring: 160 55% 42%;
-  --chart-1: 160 55% 42%;
+  --input: 37 16% 75%;
+  --ring: 58 16% 35%;
+  --chart-1: 58 16% 35%;
   --chart-2: 220 50% 25%;
   --chart-3: 170 50% 38%;
   --chart-4: 200 45% 35%;
   --chart-5: 180 48% 40%;
-  --font-sans: 'Inter', sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Satoshi', 'Inter', system-ui, sans-serif;
+  --font-serif: 'Golden', 'Cormorant Garamond', Georgia, serif;
   --font-mono: Menlo, monospace;
-  --radius: .5rem;
+  --radius: .75rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
@@ -57,6 +57,14 @@
   --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+  /* TSpa brand palette (Identidade Visual 2026) */
+  --sage: 58 16% 35%;      /* Verde sálvia  #67664A — relaxamento */
+  --graphite: 40 2% 27%;   /* Grafite suave #464543 — contraste refinado */
+  --taupe: 35 38% 27%;     /* Taupe elegante #604A2B — sofisticação */
+  --marfim: 36 16% 42%;    /* Marfim quente #7C6E59 — luz e respiro */
+  --sand: 37 16% 75%;      /* Areia suave   #C9C1B4 — base acolhedora */
+  --nude: 33 17% 87%;      /* Bege nude     #E4DFD9 — humanização */
+  --forest: 57 20% 23%;    /* Sálvia profundo (derivado) #46452F — fundos escuros */
 
 /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
@@ -175,27 +183,31 @@
   }
 }
 
-@keyframes hero-background-drift {
-  from {
-    transform: scale(1.06) translate3d(0, 0, 0);
-  }
-
-  to {
-    transform: scale(1.12) translate3d(-0.6%, -0.4%, 0);
-  }
+html {
+  scroll-behavior: smooth;
 }
 
-.hero-background-motion {
-  filter: blur(3px) brightness(0.8);
-  animation: hero-background-drift 32s ease-in-out infinite alternate;
+h1, h2, h3, h4, .font-serif {
+  letter-spacing: -0.01em;
+}
+
+/* Hero: slow "breathing" zoom on the photo */
+@keyframes hero-breathe {
+  from { transform: scale(1.04); }
+  to { transform: scale(1.12); }
+}
+
+.hero-photo {
+  /* Softens the pink LED light so the photo sits within the earthy brand palette */
+  filter: saturate(0.72) sepia(0.12);
+  animation: hero-breathe 24s ease-in-out infinite alternate;
   will-change: transform;
 }
 
 .hero-copy-item {
   opacity: 0;
-  transform: translate3d(0, 12px, 0);
-  transition: opacity 600ms ease, transform 600ms ease;
-  will-change: opacity, transform;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 900ms ease, transform 900ms ease;
 }
 
 .hero-copy-item-visible {
@@ -203,23 +215,33 @@
   transform: translate3d(0, 0, 0);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .hero-background-motion {
-    animation: none;
-    transform: scale(1.08);
-    will-change: auto;
-  }
+/* Scroll reveal for sections */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition: opacity 900ms ease, transform 900ms ease;
+}
 
-  .hero-copy-item {
+.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Arch frame used for portraits (echoes the arch at the TSpa reception) */
+.arch {
+  border-radius: 999px 999px 1.25rem 1.25rem;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-photo { animation: none; transform: scale(1.04); }
+  .hero-copy-item, .reveal {
     opacity: 1;
     transform: none;
     transition: none;
-    will-change: auto;
-  }
-
-  .hero-copy-item-visible {
-    opacity: 1;
-    transform: none;
   }
 }
 

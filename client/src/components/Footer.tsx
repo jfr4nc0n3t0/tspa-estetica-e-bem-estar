@@ -1,101 +1,55 @@
 import { SiInstagram, SiWhatsapp } from "react-icons/si";
+import logoImage from "@assets/tspa_refugio_mark.png";
+import { INSTAGRAM_URL, PHONE_DISPLAY, whatsappUrl } from "@/lib/contact";
 
-const quickLinks = [
+const links = [
   { label: "Sobre", href: "#sobre" },
-  { label: "Serviços", href: "#servicos" },
-  { label: "Localização", href: "#localizacao" },
-];
-
-const socialLinks = [
-  {
-    label: "Instagram",
-    href: "https://instagram.com/tspa.jp",
-    icon: SiInstagram,
-  },
-  {
-    label: "WhatsApp",
-    href: "https://wa.me/5583988896935",
-    icon: SiWhatsapp,
-  },
+  { label: "Cuidados", href: "#servicos" },
+  { label: "Experiências", href: "#experiencias" },
+  { label: "Planos", href: "#planos" },
+  { label: "Visite", href: "#localizacao" },
 ];
 
 export default function Footer() {
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   return (
-    <footer className="bg-card border-t border-border" data-testid="footer">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="py-12 md:py-16 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="font-serif text-2xl font-bold text-foreground">
-                tspa
-              </span>
-              <span className="font-serif text-lg font-light text-primary">
-                Refúgio do Corpo e da Alma
-              </span>
-            </div>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Refúgio do Corpo e da Alma com tratamentos exclusivos.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-foreground mb-4">Links Rápidos</h3>
-            <nav className="space-y-2">
-              {quickLinks.map((link) => (
-                <button
-                  key={link.href}
-                  onClick={() => scrollToSection(link.href)}
-                  className="block text-muted-foreground hover:text-primary transition-colors text-sm"
-                  data-testid={`link-footer-${link.label.toLowerCase()}`}
-                >
-                  {link.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-foreground mb-4">Redes Sociais</h3>
-            <div className="flex items-center gap-3 flex-wrap">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                  aria-label={social.label}
-                  data-testid={`link-social-${social.label.toLowerCase()}`}
-                >
-                  <social.icon className="h-5 w-5" />
-                </a>
-              ))}
-            </div>
-            <p className="text-muted-foreground text-sm mt-4">
-              Siga-nos para dicas de bem-estar<br />
-              e novidades exclusivas.
-            </p>
-          </div>
-        </div>
-
-        <div className="py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} tspa Refúgio do Corpo e da Alma. Todos os direitos reservados.</p>
-          <div className="flex items-center gap-4 flex-wrap justify-center">
-            <a href="#" className="hover:text-primary transition-colors">
-              Política de Privacidade
+    <footer className="bg-forest text-white/75" data-testid="footer">
+      <div className="mx-auto max-w-7xl px-5 md:px-8">
+        <div className="flex flex-col items-center gap-6 border-b border-white/10 py-16 text-center">
+          <img src={logoImage} alt="TSpa" className="w-24 brightness-0 invert" />
+          <p className="text-xs uppercase tracking-[0.4em] text-sand">Refúgio do corpo e da alma</p>
+          <div className="flex gap-3">
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram @tspa.jp"
+              className="grid h-11 w-11 place-items-center rounded-full border border-white/20 transition hover:border-sand hover:text-sand"
+              data-testid="link-social-instagram"
+            >
+              <SiInstagram className="h-4 w-4" />
             </a>
-            <a href="#" className="hover:text-primary transition-colors">
-              Termos de Uso
+            <a
+              href={whatsappUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`WhatsApp ${PHONE_DISPLAY}`}
+              className="grid h-11 w-11 place-items-center rounded-full border border-white/20 transition hover:border-sand hover:text-sand"
+              data-testid="link-social-whatsapp"
+            >
+              <SiWhatsapp className="h-4 w-4" />
             </a>
           </div>
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.2em]">
+            {links.map((link) => (
+              <a key={link.href} href={link.href} className="transition hover:text-white">
+                {link.label}
+              </a>
+            ))}
+          </nav>
         </div>
+        <p className="py-6 text-center text-xs text-white/50">
+          © {new Date().getFullYear()} TSpa · Refúgio do Corpo e da Alma · João Pessoa, PB
+        </p>
       </div>
     </footer>
   );

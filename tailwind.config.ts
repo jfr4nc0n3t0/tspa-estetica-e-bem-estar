@@ -75,6 +75,13 @@ export default {
           foreground: "hsl(var(--sidebar-accent-foreground) / <alpha-value>)",
           border: "var(--sidebar-accent-border)"
         },
+        sage: "hsl(var(--sage) / <alpha-value>)",
+        graphite: "hsl(var(--graphite) / <alpha-value>)",
+        taupe: "hsl(var(--taupe) / <alpha-value>)",
+        marfim: "hsl(var(--marfim) / <alpha-value>)",
+        sand: "hsl(var(--sand) / <alpha-value>)",
+        nude: "hsl(var(--nude) / <alpha-value>)",
+        forest: "hsl(var(--forest) / <alpha-value>)",
         status: {
           online: "rgb(34 197 94)",
           away: "rgb(245 158 11)",
