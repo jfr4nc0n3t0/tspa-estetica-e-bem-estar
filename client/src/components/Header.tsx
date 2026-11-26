@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { CalendarHeart, Menu, X } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import logoImage from "@assets/tspa_refugio_mark.png";
-import { whatsappUrl } from "@/lib/contact";
+import { agendarUrl, whatsappUrl } from "@/lib/contact";
 
 const navItems = [
   { label: "Sobre", href: "#sobre" },
@@ -66,9 +66,7 @@ export default function Header() {
         </nav>
 
         <a
-          href={whatsappUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={agendarUrl()}
           className={`hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition md:inline-flex ${
             solid
               ? "bg-primary text-primary-foreground hover:bg-forest"
@@ -76,7 +74,7 @@ export default function Header() {
           }`}
           data-testid="button-agendar-header"
         >
-          <SiWhatsapp className="h-4 w-4" aria-hidden="true" />
+          <CalendarHeart className="h-4 w-4" aria-hidden="true" />
           Agendar
         </a>
 
@@ -113,14 +111,22 @@ export default function Header() {
             ))}
           </nav>
           <a
-            href={whatsappUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={agendarUrl()}
             className="mt-8 flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 font-medium text-primary-foreground"
             data-testid="button-agendar-mobile"
           >
+            <CalendarHeart className="h-4 w-4" aria-hidden="true" />
+            Agendar meu momento
+          </a>
+          <a
+            href={whatsappUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 flex items-center justify-center gap-2 rounded-full border border-primary/30 px-6 py-3.5 text-sm font-medium text-primary"
+            data-testid="button-whatsapp-mobile"
+          >
             <SiWhatsapp className="h-4 w-4" aria-hidden="true" />
-            Agendar pelo WhatsApp
+            Prefere falar agora? WhatsApp
           </a>
         </div>
       )}

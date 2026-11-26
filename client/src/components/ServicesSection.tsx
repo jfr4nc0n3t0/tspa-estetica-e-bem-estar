@@ -7,7 +7,7 @@ import {
   massageServices,
   type Session,
 } from "@/data/services";
-import { bookingMessage, whatsappUrl } from "@/lib/contact";
+import { agendarUrl } from "@/lib/contact";
 import PhotoCarousel from "./PhotoCarousel";
 import Reveal from "./Reveal";
 import SectionTitle from "./SectionTitle";
@@ -59,9 +59,7 @@ function SessionCard({ session }: { session: Session }) {
         <p className="mt-3 text-[0.95rem] leading-relaxed text-muted-foreground">{session.phrase}</p>
         {session.note && <p className="mt-3 text-sm italic text-muted-foreground">{session.note}</p>}
         <a
-          href={whatsappUrl(bookingMessage(session.name))}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={agendarUrl(session.name)}
           className="mt-auto inline-flex items-center gap-1.5 self-start border-b border-primary/30 pb-1 pt-5 text-sm font-medium text-primary transition hover:border-primary"
         >
           Agendar este cuidado

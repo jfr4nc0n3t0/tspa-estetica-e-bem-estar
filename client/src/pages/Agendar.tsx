@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ChevronDown } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import logoImage from "@assets/tspa_refugio_mark.png";
-import { experiences, facialServices, feetRitual, headSpaServices, massageServices } from "@/data/services";
+import { experiences, facialServices, feetRitual, headSpaServices, massageServices, plans } from "@/data/services";
 import { whatsappUrl } from "@/lib/contact";
 
 // Formulário de interesse: também é o link da bio do Instagram (tspa.com.br/agendar?origem=instagram).
@@ -23,12 +23,25 @@ const INTEREST_GROUPS = [
   { label: "Massagens", items: massageServices.map((s) => s.name) },
   { label: "Cuidados faciais", items: facialServices.map((s) => s.name) },
   { label: "Rituais e experiências", items: [...feetRitual.map((s) => s.name), ...experiences.map((e) => e.name)] },
+  { label: "Planos", items: plans.map((p) => `Plano ${p.name}`) },
 ];
 
 // Cloudflare Turnstile ("não sou robô", grátis e quase sempre invisível). Só liga se a chave existir no build.
 const TURNSTILE_SITE_KEY: string | undefined = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 const NOT_SURE = "Ainda não sei, quero ajuda para escolher";
+
+/** Cuidado já escolhido no site (link "Agendar este cuidado" → ?interesse=Head Spa Ritual). */
+function interestsFromUrl(): string[] {
+  if (typeof window === "undefined") return [];
+  const value = new URLSearchParams(window.location.search).get("interesse");
+  if (!value) return [];
+  const known = INTEREST_GROUPS.flatMap((g) => g.items);
+  return value
+    .split(",")
+    .map((v) => v.trim())
+    .filter((v) => known.includes(v));
+}
 
 function sourceFromUrl(): Source | null {
   if (typeof window === "undefined") return null;
@@ -62,7 +75,7 @@ export default function Agendar() {
   const [urlSource] = useState(sourceFromUrl);
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-  const [interests, setInterests] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>(interestsFromUrl);
   const [howFound, setHowFound] = useState<Source | "">("");
   const [consent, setConsent] = useState(false);
   const [website, setWebsite] = useState(""); // armadilha para robôs
@@ -103,7 +116,8 @@ export default function Agendar() {
           name,
           whatsapp,
           interest: interest || undefined,
-          source: urlSource ?? (howFound || "site"),
+          // Link com origem específica (ex.: bio do Instagram) vale; vindo do site, usa a resposta de "Como conheceu"
+          source: urlSource && urlSource !== "site" ? urlSource : howFound || "site",
           consent,
           website,
           elapsedMs: Date.now() - startedAt.current,
@@ -162,20 +176,39 @@ export default function Agendar() {
               </p>
             </header>
 
-            <form onSubmit={onSubmit} className="mt-10 space-y-5" noValidate>
+            {/* name/id/autoComplete/type: deixam o navegador sugerir nome e telefone salvos (Chrome, Safari, iPhone) */}
+            <form onSubmit={onSubmit} className="mt-10 space-y-5" noValidate autoComplete="on" name="agendar" method="post">
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-foreground/80">Seu nome</span>
-                <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={100} required />
+                <input
+                  className={fieldClass}
+                  id="agendar-nome"
+                  name="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  autoCapitalize="words"
+                  enterKeyHint="next"
+                  maxLength={100}
+                  required
+                />
               </label>
 
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-foreground/80">WhatsApp com DDD</span>
                 <input
                   className={fieldClass}
+                  id="agendar-whatsapp"
+                  name="tel"
+                  type="tel"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
+                  onBlur={(e) => setWhatsapp(e.target.value)}
                   inputMode="tel"
                   autoComplete="tel"
+                  enterKeyHint="next"
                   placeholder="(83) 99999-0000"
                   maxLength={20}
                   required
@@ -189,7 +222,7 @@ export default function Agendar() {
                 <InterestSelect selected={interests} onToggle={toggleInterest} onClear={() => setInterests([])} />
               </div>
 
-              {!urlSource && (
+              {(!urlSource || urlSource === "site") && (
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-foreground/80">Como conheceu o TSpa?</span>
                   <span className="relative block">

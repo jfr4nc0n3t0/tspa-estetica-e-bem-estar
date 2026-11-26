@@ -8,6 +8,16 @@ export function whatsappUrl(message = `${FROM_SITE} e gostaria de agendar um mom
   return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
 }
 
+/**
+ * Link para o formulário de interesse (/agendar). Marca a origem "site" e, se vier,
+ * já deixa o cuidado escolhido no campo "O que você gostaria de viver?".
+ */
+export function agendarUrl(interest?: string) {
+  const params = new URLSearchParams({ origem: "site" });
+  if (interest) params.set("interesse", interest);
+  return `/agendar?${params.toString()}`;
+}
+
 type BookingKind = "servico" | "experiencia" | "plano";
 
 const kindLabel: Record<BookingKind, string> = {

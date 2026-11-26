@@ -1,5 +1,5 @@
 import { plans } from "@/data/services";
-import { bookingMessage, whatsappUrl } from "@/lib/contact";
+import { agendarUrl } from "@/lib/contact";
 import Reveal from "./Reveal";
 import SectionTitle from "./SectionTitle";
 
@@ -45,9 +45,7 @@ export default function PlansSection() {
                     {plan.phrase}
                   </p>
                   <a
-                    href={whatsappUrl(bookingMessage(plan.name, "plano"))}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={agendarUrl(`Plano ${plan.name}`)}
                     className={`mt-auto pt-7 text-sm font-medium underline-offset-4 hover:underline ${featured ? "" : "text-primary"}`}
                   >
                     Quero este plano →

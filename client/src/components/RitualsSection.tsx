@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import { experiences } from "@/data/services";
-import { bookingMessage, whatsappUrl } from "@/lib/contact";
+import { agendarUrl } from "@/lib/contact";
 import PhotoCarousel from "./PhotoCarousel";
 import Reveal from "./Reveal";
 import SectionTitle from "./SectionTitle";
@@ -36,9 +36,7 @@ export default function RitualsSection() {
               <p className="mt-3 text-sm uppercase tracking-[0.16em] text-white/60">{signature.combination}</p>
               <p className="mt-6 text-lg leading-relaxed text-white/80">{signature.phrase}</p>
               <a
-                href={whatsappUrl(bookingMessage(signature.name, "experiencia"))}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={agendarUrl(signature.name)}
                 className="mt-8 inline-flex items-center gap-2 self-start rounded-full bg-nude px-6 py-3 text-sm font-medium text-forest transition hover:bg-white"
               >
                 Reservar o {signature.name}
@@ -61,9 +59,7 @@ export default function RitualsSection() {
                 <p className="mt-1 text-xs uppercase tracking-[0.14em] text-sand/90">{experience.combination}</p>
                 <p className="mt-3 text-sm leading-relaxed text-white/70">{experience.phrase}</p>
                 <a
-                  href={whatsappUrl(bookingMessage(experience.name, "experiencia"))}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={agendarUrl(experience.name)}
                   className="mt-auto inline-flex items-center gap-1.5 self-start border-b border-sand/40 pb-1 pt-5 text-sm font-medium text-sand transition hover:border-sand"
                 >
                   Reservar

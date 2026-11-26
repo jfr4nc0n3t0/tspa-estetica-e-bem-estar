@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { SiWhatsapp } from "react-icons/si";
+import { CalendarHeart, ChevronDown } from "lucide-react";
 import heroImage from "@assets/hero-head-spa.jpg";
-import { whatsappUrl } from "@/lib/contact";
+import { agendarUrl } from "@/lib/contact";
 
 const STEP_MS = 220;
 
@@ -64,13 +63,11 @@ export default function HeroSection() {
           </p>
           <div {...reveal(3, "mt-9 flex flex-col gap-3 sm:flex-row sm:items-center")}>
             <a
-              href={whatsappUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={agendarUrl()}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-nude px-7 py-3.5 text-sm font-medium text-forest shadow-lg transition hover:bg-white"
               data-testid="button-agendar-hero"
             >
-              <SiWhatsapp className="h-4 w-4" aria-hidden="true" />
+              <CalendarHeart className="h-4 w-4" aria-hidden="true" />
               Agendar meu momento
             </a>
             <a
