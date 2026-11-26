@@ -155,6 +155,7 @@ export const EXPENSE_CATEGORIES = [
   "Produtos",
   "Aluguel",
   "Energia/Água",
+  "Internet",
   "Marketing",
   "Lavanderia",
   "Impostos",
