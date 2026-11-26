@@ -92,11 +92,13 @@ export default function Agenda() {
     [fromKey, toKey],
   );
 
-  // Vindo de Clientes/Leads com ?cliente=ID: abre um novo agendamento já com a cliente
+  // Vindo de Clientes (?cliente=ID) ou Leads (?lead=ID): abre um novo agendamento já preenchido
   useEffect(() => {
-    const clientId = new URLSearchParams(search).get("cliente");
-    if (clientId) {
-      setSheet({ defaults: { clientId, date: toDateInput(day) } });
+    const params = new URLSearchParams(search);
+    const clientId = params.get("cliente");
+    const leadId = params.get("lead");
+    if (clientId || leadId) {
+      setSheet({ defaults: { clientId: clientId ?? undefined, leadId: leadId ?? undefined, date: toDateInput(day) } });
       navigate("/agenda", { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

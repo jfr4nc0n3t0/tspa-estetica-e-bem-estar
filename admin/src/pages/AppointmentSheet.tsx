@@ -22,7 +22,15 @@ import {
 } from "../lib/types";
 import { confirmationMessage, waLink } from "../lib/whatsapp";
 
-export type AppointmentDefaults = { date?: string; time?: string; room?: 1 | 2; clientId?: string };
+export type AppointmentDefaults = { date?: string; time?: string; room?: 1 | 2; clientId?: string; leadId?: string };
+
+type LeadInfo = { id: string; name: string; whatsapp: string; interest: string | null; client_id: string | null };
+
+/** Telefone comparável: só dígitos, sem o 55 do Brasil */
+const phoneKey = (phone: string | null | undefined) => {
+  const d = (phone ?? "").replace(/\D/g, "");
+  return d.length >= 12 && d.startsWith("55") ? d.slice(2) : d;
+};
 
 type ClientOption = Pick<Client, "id" | "name" | "whatsapp" | "allergies" | "pregnant" | "massage_pressure" | "preferences">;
 
@@ -39,6 +47,8 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
   const editing = Boolean(appointment);
 
   const [clients, setClients] = useState<ClientOption[]>([]);
+  // Agendamento vindo de um lead: ao salvar, o lead passa para "Agendou"
+  const [lead, setLead] = useState<LeadInfo | null>(null);
   const [clientMode, setClientMode] = useState<"existing" | "new">("existing");
   const [clientId, setClientId] = useState<string>("");
   const [clientQuery, setClientQuery] = useState("");
@@ -97,8 +107,33 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
       setPaid(false);
       setNotes("");
     }
-    run(supabase.from("clients").select("id, name, whatsapp, allergies, pregnant, massage_pressure, preferences").order("name"))
-      .then((rows) => setClients((rows ?? []) as ClientOption[]))
+    setLead(null);
+    const leadId = !appointment ? defaults?.leadId : undefined;
+    Promise.all([
+      run(supabase.from("clients").select("id, name, whatsapp, allergies, pregnant, massage_pressure, preferences").order("name")),
+      leadId ? run(supabase.from("leads").select("id, name, whatsapp, interest, client_id").eq("id", leadId).maybeSingle()) : null,
+    ])
+      .then(([rows, leadRow]) => {
+        const list = (rows ?? []) as ClientOption[];
+        setClients(list);
+        const info = leadRow as LeadInfo | null;
+        if (!info) return;
+        setLead(info);
+        // Cliente: a ligada ao lead, ou uma já cadastrada com o mesmo WhatsApp, ou uma nova com os dados do lead
+        const match = info.client_id ?? list.find((c) => c.whatsapp && phoneKey(c.whatsapp) === phoneKey(info.whatsapp))?.id;
+        if (match) {
+          setClientMode("existing");
+          setClientId(match);
+        } else {
+          setClientMode("new");
+          setNewName(info.name);
+          setNewWhatsapp(info.whatsapp);
+        }
+        // Serviços: os que o lead marcou no formulário, quando existem no cadastro
+        const wanted = (info.interest ?? "").split(",").map((i) => i.trim().toLowerCase()).filter(Boolean);
+        const ids = services.filter((s) => s.active && wanted.includes(s.name.toLowerCase())).map((s) => s.id);
+        if (ids.length) applyServices(ids);
+      })
       .catch((err) => setError(friendlyError(err)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, appointment?.id]);
@@ -207,7 +242,16 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
       if (appointment) await run(supabase.from("appointments").update(payload).eq("id", appointment.id));
       else await run(supabase.from("appointments").insert(payload));
 
-      toast(editing ? "Agendamento atualizado." : "Agendamento criado.");
+      // Só agora, com o agendamento salvo, o lead vira "Agendou"
+      if (lead && !appointment) {
+        const { error: leadError } = await supabase
+          .from("leads")
+          .update({ stage: "agendou", client_id: finalClientId, last_contact_at: new Date().toISOString() })
+          .eq("id", lead.id);
+        if (leadError) toast("Agendamento salvo, mas não consegui mover o lead para Agendou. Faça isso em Leads.", "error");
+      }
+
+      toast(editing ? "Agendamento atualizado." : lead ? "Agendamento criado. O lead foi para Agendou." : "Agendamento criado.");
       onSaved();
       onClose();
     } catch (err) {
@@ -271,6 +315,11 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
       }
     >
       <div className="space-y-4">
+        {lead && (
+          <p className="rounded-xl bg-primary/10 px-3.5 py-2.5 text-sm text-primary">
+            Agendamento do lead <strong className="font-semibold">{lead.name}</strong>. Ele só vai para “Agendou” quando você salvar.
+          </p>
+        )}
         {/* Cliente */}
         <div>
           <div className="mb-1.5 flex items-center justify-between">

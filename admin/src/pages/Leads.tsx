@@ -105,20 +105,9 @@ export default function Leads() {
     }
   }
 
-  async function schedule(lead: Lead) {
-    try {
-      let clientId = lead.client_id;
-      if (!clientId) {
-        const created = (await run(
-          supabase.from("clients").insert({ name: lead.name, whatsapp: lead.whatsapp.replace(/\D/g, "") || null, notes: lead.interest ? `Interesse: ${lead.interest}` : null }).select("id").single(),
-        )) as { id: string };
-        clientId = created.id;
-      }
-      await run(supabase.from("leads").update({ stage: "agendou", client_id: clientId, last_contact_at: new Date().toISOString() }).eq("id", lead.id));
-      navigate(`/agenda?cliente=${clientId}`);
-    } catch (err) {
-      toast(friendlyError(err), "error");
-    }
+  /** Abre um agendamento já preenchido com o lead. Ele só vai para "Agendou" quando o agendamento for salvo. */
+  function schedule(lead: Lead) {
+    navigate(`/agenda?lead=${lead.id}`);
   }
 
   function openWhatsapp(lead: Lead) {
