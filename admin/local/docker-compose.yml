@@ -1,0 +1,83 @@
+# Supabase "enxuto" para testar o painel no computador.
+# Só para uso local: as senhas e o segredo abaixo NÃO são usados em produção.
+# Suba com:  npm --prefix admin run local:up
+name: tspa-local
+
+x-jwt-secret: &jwt_secret tspa-local-jwt-secret-somente-para-testes-0001
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "54322:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      retries: 30
+
+  # Login (o mesmo serviço que o Supabase usa)
+  auth:
+    image: supabase/gotrue:v2.164.0
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:54321/auth/v1
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:auth@db:5432/postgres?search_path=auth
+      GOTRUE_SITE_URL: http://localhost:5174
+      GOTRUE_URI_ALLOW_LIST: http://localhost:5174
+      GOTRUE_JWT_SECRET: *jwt_secret
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_DISABLE_SIGNUP: "true"
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_SMTP_HOST: mail
+      GOTRUE_SMTP_PORT: 1025
+      GOTRUE_SMTP_ADMIN_EMAIL: painel@tspa.local
+      GOTRUE_SMTP_SENDER_NAME: TSpa (teste local)
+
+  # API do banco (o mesmo serviço que o Supabase usa)
+  rest:
+    image: postgrest/postgrest:v12.2.3
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://authenticator:authenticator@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: *jwt_secret
+
+  # Endereço único http://localhost:54321, como no Supabase (/auth/v1 e /rest/v1)
+  gateway:
+    image: node:20-alpine
+    command: ["node", "/gateway.mjs"]
+    volumes:
+      - ./gateway.mjs:/gateway.mjs:ro
+    ports:
+      - "54321:8000"
+    depends_on:
+      - auth
+      - rest
+
+  # Caixa de e-mails de teste (para o "Esqueci a senha"): http://localhost:54324
+  mail:
+    image: sj26/mailcatcher:latest
+    ports:
+      - "54324:1080"
+
+volumes:
+  db-data:

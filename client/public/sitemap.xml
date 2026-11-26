@@ -9,4 +9,10 @@
       <image:loc>https://tspa.com.br/og-image.jpg</image:loc>
     </image:image>
   </url>
+  <url>
+    <loc>https://tspa.com.br/agendar</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>

@@ -4,6 +4,8 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
+// No Render o site fica atrás de um proxy: assim req.ip é o IP real do visitante
+app.set("trust proxy", 1);
 const httpServer = createServer(app);
 
 declare module "http" {

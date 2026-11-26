@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Paleta TSpa: verde sálvia #67664A · grafite #464543 · taupe #604A2B
+   marfim #7C6E59 · areia #C9C1B4 · bege nude #E4DFD9 (sem dourado) */
+:root {
+  --sage: 58 16% 35%;
+  --graphite: 40 2% 27%;
+  --taupe: 35 38% 27%;
+  --marfim: 36 16% 42%;
+  --sand: 37 16% 75%;
+  --nude: 33 17% 87%;
+  --forest: 57 20% 23%;
+  /* Cores de apoio (derivadas da paleta, para diferenciar estados) */
+  --terracotta: 16 52% 47%;  /* quente / faltou */
+  --ochre: 38 64% 44%;       /* morno / aguardando confirmação */
+  --dusk: 205 24% 45%;       /* frio */
+  /* Gráficos do financeiro (par validado para daltonismo): entradas × despesas */
+  --chart-in: 208 65.5% 38.6%;   /* #2266a3 */
+  --chart-out: 19 53.6% 49%;     /* #c0643a */
+
+  --background: 34 24% 94%;
+  --foreground: 40 2% 22%;
+  --card: 34 30% 98%;
+  --border: 37 16% 84%;
+  --input: 37 16% 78%;
+  --muted: 33 20% 89%;
+  --muted-foreground: 36 10% 40%;
+  --primary: 58 16% 35%;
+  --primary-foreground: 34 30% 97%;
+  --accent: 33 17% 87%;
+  --accent-foreground: 35 38% 27%;
+  --danger: 12 45% 42%;
+  --danger-foreground: 34 30% 97%;
+  color-scheme: light;
+}
+
+.dark {
+  --sage: 58 18% 58%;
+  --taupe: 33 30% 62%;
+  --marfim: 36 18% 62%;
+  --sand: 37 12% 40%;
+  --nude: 40 6% 22%;
+  --terracotta: 16 62% 64%;
+  --ochre: 40 66% 60%;
+  --dusk: 205 32% 66%;
+  --chart-in: 205 48.1% 52.4%;   /* #4b8fc0 */
+  --chart-out: 21 59.8% 56.1%;   /* #d27a4c */
+
+  --background: 50 8% 9%;
+  --foreground: 33 17% 88%;
+  --card: 50 7% 13%;
+  --border: 45 6% 21%;
+  --input: 45 6% 28%;
+  --muted: 45 6% 17%;
+  --muted-foreground: 37 10% 64%;
+  --primary: 58 20% 60%;
+  --primary-foreground: 50 8% 10%;
+  --accent: 45 7% 20%;
+  --accent-foreground: 33 30% 78%;
+  --danger: 12 50% 58%;
+  --danger-foreground: 50 8% 10%;
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+  h1, h2, h3 {
+    letter-spacing: -0.01em;
+  }
+  input, select, textarea, button {
+    font: inherit;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  /* Faixa listrada para horários bloqueados (Sala 2 desativada) */
+  .blocked-stripes {
+    background-image: repeating-linear-gradient(
+      135deg,
+      hsl(var(--muted)) 0 8px,
+      transparent 8px 16px
+    );
+  }
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.animate-sheet { animation: sheet-up 220ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet { animation: none; }
+}

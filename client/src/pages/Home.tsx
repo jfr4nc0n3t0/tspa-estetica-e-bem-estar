@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import ManifestoSection from "@/components/ManifestoSection";
@@ -10,6 +11,14 @@ import LocationSection from "@/components/LocationSection";
 import Footer from "@/components/Footer";
 
 export default function Home() {
+  // Vindo de outra página com link para uma seção (ex.: /#servicos), rola até ela depois de montar
+  useEffect(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (!id) return;
+    const frame = requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "instant" }));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Header />

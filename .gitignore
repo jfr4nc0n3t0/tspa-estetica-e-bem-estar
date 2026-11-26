@@ -9,3 +9,5 @@ node_modules.nosync
 node_modules_trash
 *.heic
 marketing/
+.env
+*.local
