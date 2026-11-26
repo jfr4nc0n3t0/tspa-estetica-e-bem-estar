@@ -10,11 +10,9 @@ O que tem em cada lugar:
 | `admin/` | O painel. É um app separado do site, publicado no Cloudflare Pages. |
 | `admin/supabase/schema.sql` | O script único do banco (tabelas, regras de conflito, segurança). |
 | `client/src/pages/Agendar.tsx` | A página pública `tspa.com.br/agendar` (formulário de interesse). |
-| `server/routes.ts` | A rota `POST /api/leads`, que recebe o formulário e grava o lead no Supabase. |
+| `functions/api/leads.ts` | A rota `POST /api/leads` (Cloudflare), que recebe o formulário e grava o lead no Supabase. |
 
-> **Importante:** o site publica sozinho a cada push na `main`. A página `/agendar` só funciona
-> depois de configurar o Supabase (passo B) e as variáveis do site no Render (passo C).
-> Faça os passos A, B e C **antes** de subir este código para a `main`.
+> **Importante:** site e painel publicam sozinhos (Cloudflare Pages) a cada push na `main`.
 
 ---
 
@@ -58,26 +56,21 @@ Onde colocar:
 | Lugar | Variáveis |
 | --- | --- |
 | Painel no Cloudflare Pages (passo D) | `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLIC_KEY` |
-| Site no Render (passo C) | `SUPABASE_URL` e `SUPABASE_PUBLIC_KEY` |
+| Site no Cloudflare Pages (passo C) | `SUPABASE_URL` e `SUPABASE_PUBLIC_KEY` |
 | Seu computador (opcional) | arquivo `admin/.env.local` (copie de `admin/.env.example`) |
 
 A chave pública pode aparecer no navegador sem problema: as regras do banco (RLS) só deixam a
 dona ler e escrever, e o visitante do site só consegue **inserir** um lead, nunca ler.
 
-## C) Site no Render: variáveis do formulário
+## C) Site: variáveis do formulário
 
-O site continua no Render, como já está. Só precisa de duas variáveis para o formulário `/agendar`.
+O site (`tspa.com.br`) está no Cloudflare Pages, no projeto `tspa-site` (veja `CLOUDFLARE.md` na raiz).
+O formulário `/agendar` precisa de duas variáveis nesse projeto (**Settings** → **Variables and Secrets**):
 
-1. **dashboard.render.com** → abra o serviço do site → **Environment**.
-2. **Add Environment Variable**:
-   - `SUPABASE_URL` = a Project URL
-   - `SUPABASE_PUBLIC_KEY` = a chave pública
-3. **Save Changes** (o Render publica o site de novo).
-4. Para o site não ser reconstruído quando só o painel mudar: **Settings** → **Build Filters** →
-   em **Ignored Paths** adicione `admin/**`.
+- `SUPABASE_URL` = a Project URL (ex.: `https://xxxx.supabase.co`, sem nada depois)
+- `SUPABASE_PUBLIC_KEY` = a chave pública, **a mesma** usada no painel (`VITE_SUPABASE_PUBLIC_KEY`)
 
-> O plano grátis do Render aceita só 2 domínios próprios, e eles já são `tspa.com.br` e `www`.
-> Por isso o painel fica no **Cloudflare Pages** (grátis), e o DNS continua no Registro.br.
+Depois de mudar: **Deployments** → **Retry deployment**.
 
 ## D) Painel no Cloudflare Pages
 
@@ -218,8 +211,8 @@ O script pede a conexão do banco de **destino**, pede para você digitar `RESTA
 3. pergunta se deve restaurar os logins. Responda `s` só num projeto novo, sem usuários.
 
 Para **migrar** para um projeto novo: faça o backup do antigo, crie o projeto novo, rode o `restore`
-apontando para ele (respondendo `s` para os logins) e troque a URL e a chave pública no Render
-(passo C) e no Cloudflare Pages (passo D).
+apontando para ele (respondendo `s` para os logins) e troque a URL e a chave pública nos dois projetos do
+Cloudflare Pages: `tspa-site` (passo C) e `tspa-admin` (passo D).
 
 ## Custos e cuidados
 
@@ -227,7 +220,7 @@ apontando para ele (respondendo `s` para os logins) e troque a URL e a chave pú
   Quando o painel virar rotina, vale o **Pro (US$ 25/mês)**: backup diário e sem pausa.
 - **LGPD:** a anamnese é dado de saúde. Registre só o necessário. Se uma cliente pedir, exclua o
   cadastro dela (Clientes → Excluir apaga também o histórico).
-- Ative a **verificação em duas etapas** nas contas do Supabase, Render, GitHub e Registro.br.
+- Ative a **verificação em duas etapas** nas contas do Supabase, Cloudflare, GitHub e Registro.br.
 
 ## Próximos passos (opcionais)
 

@@ -1,5 +1,7 @@
 # Mudar o site do Render para a Cloudflare (grátis)
 
+> ✅ Migração concluída em 26/11/2026: site, formulário e painel estão no Cloudflare Pages e o DNS está na Cloudflare.
+
 O site (`tspa.com.br`), o formulário `/agendar` e o painel (`admin.tspa.com.br`) passam a ficar todos
 na Cloudflare, no plano grátis. O registro do domínio continua no Registro.br (mesma renovação anual).
 
