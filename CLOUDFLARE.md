@@ -36,7 +36,8 @@ na Cloudflare, no plano grátis. O registro do domínio continua no Registro.br 
    - `https://tspa-site.pages.dev/agendar` mostra o formulário; envie um contato de teste e confira em **Leads** no painel (depois exclua);
    - `https://tspa-site.pages.dev/qualquer-coisa` mostra "Página não encontrada".
 4. Para não publicar o site quando só o painel mudar: **Settings** → **Builds & deployments** →
-   **Build watch paths** → em **Exclude paths** coloque `admin/*` (se a opção existir na sua tela).
+   **Build watch paths** → deixe **Include paths** como `*` e, em **Exclude paths**, coloque `admin/**`
+   (com dois asteriscos). Não restrinja o Include: o site depende de `client/`, `shared/`, `functions/` e outros.
 
 > Mudou alguma variável depois? **Deployments** → **Retry deployment** para ela valer.
 

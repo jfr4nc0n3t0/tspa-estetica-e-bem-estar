@@ -91,7 +91,8 @@ Depois de mudar: **Deployments** → **Retry deployment**.
 4. **Save and Deploy**. Em 1–2 minutos, abra `https://tspa-admin.pages.dev` e entre com o login do passo A.5.
    As rotas (ex.: `/financeiro`) já funcionam: o arquivo `admin/public/_redirects` cuida disso.
 5. Para o painel só ser publicado quando algo mudar nele: **Settings** → **Builds & deployments** →
-   **Build watch paths** → em **Include paths** coloque `admin/*`.
+   **Build watch paths** → em **Include paths** coloque `admin/**` (com dois asteriscos, para valer também
+   para as subpastas como `admin/src/...`).
 
 > Se mudar as variáveis depois, vá em **Deployments** → **Retry deployment** para elas valerem.
 
