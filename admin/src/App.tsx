@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { Redirect, Route, Switch } from "wouter";
 import { configError, supabase } from "./lib/supabase";
 import { AppDataProvider } from "./lib/appData";
+import { ConfirmProvider } from "./components/Confirm";
 import { ToastProvider } from "./components/Toast";
 import { Layout } from "./components/Layout";
 import { Spinner } from "./components/ui";
@@ -17,7 +18,9 @@ export default function App() {
   if (configError) return <SetupNeeded reason={configError} />;
   return (
     <ToastProvider>
-      <AuthGate />
+      <ConfirmProvider>
+        <AuthGate />
+      </ConfirmProvider>
     </ToastProvider>
   );
 }

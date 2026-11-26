@@ -4,6 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { ArrowRight, CalendarPlus, ChevronDown, Flame, Info, MessageCircle, Plus, Snowflake, Thermometer } from "lucide-react";
 import { useLocation } from "wouter";
 import { Sheet } from "../components/Sheet";
+import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
 import { Badge, Button, Card, ErrorBox, Field, Input, PageHeader, Select, Spinner, Stat, Textarea, cx } from "../components/ui";
 import { friendlyError } from "../lib/errors";
@@ -304,6 +305,7 @@ function TemperatureTag({ lead }: { lead: Lead }) {
 
 function LeadSheet({ lead, open, onClose, onSaved }: { lead: Lead | null; open: boolean; onClose: () => void; onSaved: () => void }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const [form, setForm] = useState({ name: "", whatsapp: "", source: "instagram" as LeadSource, interest: "", notes: "", stage: "novo" as LeadStage });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -361,7 +363,16 @@ function LeadSheet({ lead, open, onClose, onSaved }: { lead: Lead | null; open: 
   }
 
   async function remove() {
-    if (!lead || !window.confirm(`Excluir o lead ${lead.name}?`)) return;
+    if (!lead) return;
+    const ok = await confirm({
+      title: "Excluir lead?",
+      message: (
+        <>
+          <strong className="text-foreground">{lead.name}</strong> sai do funil. Se a pessoa só não quis agendar agora, prefira mover para Perdido (assim a taxa de conversão fica correta).
+        </>
+      ),
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       await run(supabase.from("leads").delete().eq("id", lead.id));

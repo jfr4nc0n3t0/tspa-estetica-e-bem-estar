@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Cake, CalendarPlus, Gift, MessageCircle, Plus, Search } from "lucide-react";
 import { useLocation } from "wouter";
 import { Sheet } from "../components/Sheet";
+import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
 import { Badge, Button, Card, Empty, ErrorBox, Field, Input, PageHeader, Segmented, Select, Spinner, Switch, Textarea, cx } from "../components/ui";
 import { friendlyError } from "../lib/errors";
@@ -149,6 +150,7 @@ export default function Clientes() {
 
 function ClientSheet({ client, open, onClose, onSaved }: { client: Row | null; open: boolean; onClose: () => void; onSaved: () => void }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const [, navigate] = useLocation();
   const [tab, setTab] = useState<"dados" | "anamnese" | "historico">("dados");
   const [form, setForm] = useState({
@@ -221,9 +223,14 @@ function ClientSheet({ client, open, onClose, onSaved }: { client: Row | null; o
 
   async function remove() {
     if (!client) return;
-    const ok = window.confirm(
-      `Excluir ${client.name}? Isso apaga também o histórico de agendamentos e as entradas ligadas a eles. Não dá para desfazer.`,
-    );
+    const ok = await confirm({
+      title: "Excluir cliente?",
+      message: (
+        <>
+          <strong className="text-foreground">{client.name}</strong> será excluída junto com o histórico de agendamentos e as entradas ligadas a eles. Não dá para desfazer.
+        </>
+      ),
+    });
     if (!ok) return;
     setSaving(true);
     try {

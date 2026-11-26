@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Copy, Droplets, LogOut, Plus, UserRound, UsersRound } from "lucide-react";
 import { Sheet } from "../components/Sheet";
+import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
 import { Badge, Button, Card, Field, Input, PageHeader, SectionTitle, Segmented, Select, Switch } from "../components/ui";
 import { useAppData } from "../lib/appData";
@@ -16,6 +17,7 @@ const HOURS = Array.from({ length: 48 }, (_, i) => minutesToTime(i * 30));
 export default function Mais() {
   const { settings, services, professionals, email, refreshSettings, refreshServices, refreshProfessionals } = useAppData();
   const toast = useToast();
+  const confirm = useConfirm();
   const [editing, setEditing] = useState<Service | "new" | null>(null);
   const [editingPro, setEditingPro] = useState<Professional | "new" | null>(null);
   const [theme, setTheme] = useState<ThemePref>(getThemePref());
@@ -44,11 +46,21 @@ export default function Mais() {
   }
 
   async function sample(action: "load" | "clear") {
-    const question =
+    const ok = await confirm(
       action === "load"
-        ? "Carregar dados de exemplo? Eles aparecem com “(exemplo)” e podem ser apagados depois sem afetar seus dados reais."
-        : "Apagar todos os dados de exemplo? Seus dados reais continuam intactos.";
-    if (!window.confirm(question)) return;
+        ? {
+            title: "Carregar dados de exemplo?",
+            message: "Clientes, agendamentos, despesas e leads fictícios, todos com “(exemplo)”. Dá para apagar depois sem afetar seus dados reais.",
+            confirmLabel: "Carregar",
+            tone: "default",
+          }
+        : {
+            title: "Apagar dados de exemplo?",
+            message: "Sai tudo o que tem “(exemplo)”. Seus dados reais continuam intactos.",
+            confirmLabel: "Apagar exemplos",
+          },
+    );
+    if (!ok) return;
     setBusy(action);
     try {
       await run(supabase.rpc(action === "load" ? "load_sample_data" : "clear_sample_data"));
@@ -211,6 +223,7 @@ export default function Mais() {
 
 function ServiceSheet({ service, open, onClose, onSaved }: { service: Service | null; open: boolean; onClose: () => void; onSaved: () => Promise<void> }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const [form, setForm] = useState({ name: "", duration_min: "60", price: "", needs_professional: true, active: true });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -252,7 +265,12 @@ function ServiceSheet({ service, open, onClose, onSaved }: { service: Service | 
   }
 
   async function remove() {
-    if (!service || !window.confirm(`Excluir “${service.name}”? Os agendamentos antigos continuam com o nome do serviço. Se preferir, só desative.`)) return;
+    if (!service) return;
+    const ok = await confirm({
+      title: "Excluir serviço?",
+      message: `“${service.name}” sai da lista. Os agendamentos antigos continuam com o nome dele. Se só não oferece mais, prefira desativar.`,
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       await run(supabase.from("services").delete().eq("id", service.id));
@@ -313,6 +331,7 @@ function ProfessionalSheet({ professional, open, onClose, onSaved, activeCount }
   activeCount: number;
 }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const [name, setName] = useState("");
   const [active, setActive] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -350,7 +369,11 @@ function ProfessionalSheet({ professional, open, onClose, onSaved, activeCount }
   async function remove() {
     if (!professional) return;
     if (lastActive) return setError("É preciso ter pelo menos uma profissional ativa.");
-    if (!window.confirm(`Excluir ${professional.name}?`)) return;
+    const ok = await confirm({
+      title: "Excluir profissional?",
+      message: `${professional.name} sai da equipe. Se ela já tem atendimentos na agenda, o painel pede para desativar em vez de excluir.`,
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       await run(supabase.from("professionals").delete().eq("id", professional.id));

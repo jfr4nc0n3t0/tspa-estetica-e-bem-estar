@@ -3,6 +3,7 @@ import { addDays, addMinutes, parseISO } from "date-fns";
 import { Check, MessageCircle, Plus, Trash2, X } from "lucide-react";
 import { Sheet } from "../components/Sheet";
 import { Button, Field, Input, Segmented, Select, Switch, Textarea } from "../components/ui";
+import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
 import { useAppData } from "../lib/appData";
 import { friendlyError } from "../lib/errors";
@@ -34,6 +35,7 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
 }) {
   const { settings, services, professionals, professionalName } = useAppData();
   const toast = useToast();
+  const confirm = useConfirm();
   const editing = Boolean(appointment);
 
   const [clients, setClients] = useState<ClientOption[]>([]);
@@ -218,7 +220,13 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
 
   async function remove() {
     if (!appointment) return;
-    if (!window.confirm("Excluir este agendamento? Se ele estava pago, a entrada no financeiro também sai.")) return;
+    const ok = await confirm({
+      title: "Excluir agendamento?",
+      message: appointment.paid
+        ? "Ele estava pago: a entrada correspondente também sai do Financeiro. Não dá para desfazer."
+        : "Não dá para desfazer. Se a cliente só desmarcou, prefira mudar o status para Cancelado.",
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       await run(supabase.from("appointments").delete().eq("id", appointment.id));

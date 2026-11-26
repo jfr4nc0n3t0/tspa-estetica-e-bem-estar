@@ -6,7 +6,7 @@ export function cx(...classes: (string | false | null | undefined)[]) {
 }
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "destructive" | "outline";
   size?: "sm" | "md" | "icon";
   loading?: boolean;
 };
@@ -30,6 +30,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         variant === "outline" && "border border-input bg-card text-foreground hover:bg-muted",
         variant === "ghost" && "text-foreground/80 hover:bg-muted",
         variant === "danger" && "bg-danger/10 text-danger hover:bg-danger/15",
+        variant === "destructive" && "bg-danger text-danger-foreground hover:bg-danger/90",
         className,
       )}
       {...props}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { addMonths, addYears, endOfMonth, endOfYear, getYear, setMonth as withMonth, startOfMonth, startOfYear } from "date-fns";
 import { CalendarClock, ChevronLeft, ChevronRight, Plus, Repeat } from "lucide-react";
 import { Sheet } from "../components/Sheet";
+import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
 import { Badge, Button, Card, Empty, ErrorBox, Field, Input, PageHeader, SectionTitle, Segmented, Select, Spinner, Stat, Switch, cx } from "../components/ui";
 import { friendlyError } from "../lib/errors";
@@ -472,6 +473,7 @@ function TransactionSheet({ transaction, open, defaultDate, defaultRecurring = f
   onSaved: () => void;
 }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const [kind, setKind] = useState<Transaction["kind"]>("despesa");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(defaultDate);
@@ -549,10 +551,14 @@ function TransactionSheet({ transaction, open, defaultDate, defaultRecurring = f
   }
 
   async function remove() {
-    const question = transaction?.recurring_id
-      ? "Excluir o lançamento deste mês? A despesa fixa continua nos próximos meses (para parar, edite em Despesas fixas)."
-      : "Excluir este lançamento?";
-    if (!transaction || !window.confirm(question)) return;
+    if (!transaction) return;
+    const ok = await confirm({
+      title: "Excluir lançamento?",
+      message: transaction.recurring_id
+        ? "Sai só o lançamento deste mês. A despesa fixa continua nos próximos meses (para parar, edite em Despesas fixas)."
+        : `${transaction.description || transaction.category} · ${brl(transaction.amount)}. Não dá para desfazer.`,
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       await run(supabase.from("transactions").delete().eq("id", transaction.id));
@@ -646,6 +652,7 @@ function TransactionSheet({ transaction, open, defaultDate, defaultRecurring = f
 /** Edita uma despesa fixa: vale para os próximos meses (os já lançados não mudam). */
 function RecurringSheet({ item, onClose, onSaved }: { item: RecurringExpense | null; onClose: () => void; onSaved: () => void }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const [form, setForm] = useState({ description: "", category: EXPENSE_CATEGORIES[0] as string, amount: "", day: "5", payment: "" as PaymentMethod | "", active: true });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -701,7 +708,12 @@ function RecurringSheet({ item, onClose, onSaved }: { item: RecurringExpense | n
 
   async function stop() {
     if (!item) return;
-    if (!window.confirm(`Parar de repetir “${item.description}”? Os meses já lançados continuam no financeiro.`)) return;
+    const ok = await confirm({
+      title: "Parar de repetir?",
+      message: `“${item.description}” deixa de ser lançada nos próximos meses. Os meses já lançados continuam no Financeiro.`,
+      confirmLabel: "Parar de repetir",
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       await run(supabase.from("recurring_expenses").delete().eq("id", item.id));
