@@ -82,7 +82,8 @@ export async function handleLead(body: unknown, env: LeadEnv, ip?: string): Prom
     return { status: 400, body: { message: "Não conseguimos confirmar que você não é um robô. Recarregue a página e tente de novo." } };
   }
 
-  const url = env.SUPABASE_URL?.trim().replace(/\/$/, "");
+  // Aceita a URL com ou sem "/" ou "/rest/v1" no fim (erro comum ao copiar do Supabase)
+  const url = env.SUPABASE_URL?.trim().replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
   const key = env.SUPABASE_PUBLIC_KEY?.trim();
   if (!url || !key) {
     console.error("[leads] SUPABASE_URL ou SUPABASE_PUBLIC_KEY não configurados");
