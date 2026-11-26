@@ -11,3 +11,5 @@ node_modules_trash
 marketing/
 .env
 *.local
+.dev.vars
+.wrangler/

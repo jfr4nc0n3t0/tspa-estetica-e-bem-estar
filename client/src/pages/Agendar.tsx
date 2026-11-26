@@ -25,6 +25,9 @@ const INTEREST_GROUPS = [
   { label: "Rituais e experiências", items: [...feetRitual.map((s) => s.name), ...experiences.map((e) => e.name)] },
 ];
 
+// Cloudflare Turnstile ("não sou robô", grátis e quase sempre invisível). Só liga se a chave existir no build.
+const TURNSTILE_SITE_KEY: string | undefined = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+
 const NOT_SURE = "Ainda não sei, quero ajuda para escolher";
 
 function sourceFromUrl(): Source | null {
@@ -66,6 +69,7 @@ export default function Agendar() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
   const startedAt = useRef(Date.now());
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Várias escolhas; "Ainda não sei" não combina com as outras
   function toggleInterest(item: string) {
@@ -77,7 +81,8 @@ export default function Agendar() {
   }
   const interest = interests.join(", ");
   // O botão só libera com nome, WhatsApp com DDD e o aceite da LGPD marcado
-  const canSubmit = name.trim().length >= 2 && whatsapp.replace(/\D/g, "").length >= 10 && consent;
+  const canSubmit =
+    name.trim().length >= 2 && whatsapp.replace(/\D/g, "").length >= 10 && consent && (!TURNSTILE_SITE_KEY || Boolean(turnstileToken));
   const chosen = interests.filter((i) => i !== NOT_SURE).join(", ");
 
   async function onSubmit(e: FormEvent) {
@@ -100,6 +105,7 @@ export default function Agendar() {
           consent,
           website,
           elapsedMs: Date.now() - startedAt.current,
+          turnstileToken: turnstileToken ?? undefined,
         }),
       });
       if (!response.ok) {
@@ -220,6 +226,8 @@ export default function Agendar() {
                 </span>
               </label>
 
+              {TURNSTILE_SITE_KEY && <Turnstile siteKey={TURNSTILE_SITE_KEY} onToken={setTurnstileToken} />}
+
               {error && (
                 <p className="rounded-2xl bg-taupe/10 px-4 py-3 text-sm text-taupe" role="alert">
                   {error}
@@ -235,7 +243,9 @@ export default function Agendar() {
               </button>
               {!canSubmit && (
                 <p className="-mt-2 text-center text-xs text-muted-foreground">
-                  Preencha nome, WhatsApp com DDD e marque o aceite para enviar.
+                  {name.trim().length >= 2 && whatsapp.replace(/\D/g, "").length >= 10 && consent
+                    ? "Só um instante: confirmando que você não é um robô…"
+                    : "Preencha nome, WhatsApp com DDD e marque o aceite para enviar."}
                 </p>
               )}
             </form>
@@ -325,4 +335,53 @@ function InterestSelect({ selected, onToggle, onClear }: { selected: string[]; o
       )}
     </div>
   );
+}
+
+type TurnstileApi = {
+  render: (el: HTMLElement, options: Record<string, unknown>) => string;
+  remove: (id: string) => void;
+};
+
+/** Verificação "não sou robô" da Cloudflare. Na maioria das vezes resolve sozinha, sem a pessoa clicar. */
+function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (token: string | null) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let widgetId: string | null = null;
+    let cancelled = false;
+    const w = window as unknown as { turnstile?: TurnstileApi };
+
+    const mount = () => {
+      if (cancelled || !ref.current || !w.turnstile) return;
+      widgetId = w.turnstile.render(ref.current, {
+        sitekey: siteKey,
+        appearance: "interaction-only",
+        language: "pt-br",
+        callback: (token: string) => onToken(token),
+        "expired-callback": () => onToken(null),
+        "error-callback": () => onToken(null),
+      });
+    };
+
+    if (w.turnstile) mount();
+    else {
+      const id = "cf-turnstile-script";
+      let script = document.getElementById(id) as HTMLScriptElement | null;
+      if (!script) {
+        script = document.createElement("script");
+        script.id = id;
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        document.head.appendChild(script);
+      }
+      script.addEventListener("load", mount);
+    }
+
+    return () => {
+      cancelled = true;
+      if (widgetId && w.turnstile) w.turnstile.remove(widgetId);
+    };
+  }, [siteKey, onToken]);
+
+  return <div ref={ref} className="flex justify-center" />;
 }

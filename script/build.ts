@@ -34,14 +34,22 @@ const allowlist = [
   "zod-validation-error",
 ];
 
+// `--static`: só o site (para o Cloudflare Pages); sem ele, também gera o servidor (Render)
+const staticOnly = process.argv.includes("--static");
+
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
 
   console.log("building client...");
   await viteBuild();
 
-  console.log("prerendering home page...");
+  console.log("prerendering pages...");
   await prerender();
+
+  if (staticOnly) {
+    console.log("static build done: dist/public");
+    return;
+  }
 
   console.log("building server...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));
@@ -79,7 +87,37 @@ async function prerender() {
   const template = await readFile(indexPath, "utf-8");
   if (!template.includes("<!--app-html-->")) throw new Error("index.html is missing the <!--app-html--> placeholder");
   await writeFile(indexPath, template.replace("<!--app-html-->", render("/")));
+
+  // /agendar: página própria (agendar.html) com título e descrição dela
+  const agendar = withMeta(template, {
+    title: "Agende seu momento | TSpa · Refúgio do Corpo e da Alma",
+    description:
+      "Deixe seu nome e WhatsApp e o TSpa chama você para encontrar o melhor horário. Head Spa, massagens e rituais em João Pessoa.",
+    url: "https://tspa.com.br/agendar",
+  });
+  await writeFile(path.resolve("dist/public/agendar.html"), agendar.replace("<!--app-html-->", render("/agendar")));
+
+  // 404.html: qualquer endereço que não existe recebe "Página não encontrada" com status 404
+  const notFound = withMeta(template, { title: "Página não encontrada | TSpa" }).replace(
+    /<meta name="robots"[^>]*>/,
+    '<meta name="robots" content="noindex" />',
+  );
+  await writeFile(path.resolve("dist/public/404.html"), notFound.replace("<!--app-html-->", ""));
+
   await rm(ssrOut, { recursive: true, force: true });
+}
+
+function withMeta(html: string, meta: { title: string; description?: string; url?: string }) {
+  let out = html.replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`);
+  if (meta.description) {
+    out = out.replace(/(<meta name="description" content=")[^"]*(")/, `$1${meta.description}$2`);
+  }
+  if (meta.url) {
+    out = out
+      .replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${meta.url}$2`)
+      .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${meta.url}$2`);
+  }
+  return out;
 }
 
 buildAll().catch((err) => {

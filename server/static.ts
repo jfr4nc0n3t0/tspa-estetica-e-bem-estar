@@ -10,13 +10,12 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // extensions: "/agendar" serve agendar.html (gerado no build)
+  app.use(express.static(distPath, { extensions: ["html"] }));
 
-  // Only these pages exist; any other path gets a real 404 status (the client renders the not-found page).
-  const pages = new Set(["/", "/agendar"]);
-  app.use("*", (req, res) => {
-    const pathname = req.originalUrl.split("?")[0].replace(/(.)\/$/, "$1");
-    if (!pages.has(pathname)) res.status(404);
-    res.sendFile(path.resolve(distPath, "index.html"));
+  // Qualquer outro endereço: página "não encontrada" com status 404
+  app.use("*", (_req, res) => {
+    const notFound = path.resolve(distPath, "404.html");
+    res.status(404).sendFile(fs.existsSync(notFound) ? notFound : path.resolve(distPath, "index.html"));
   });
 }
