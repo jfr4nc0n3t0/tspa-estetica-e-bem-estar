@@ -108,6 +108,9 @@ export type Lead = {
   is_sample: boolean;
   created_at: string;
   last_contact_at: string | null;
+  /** Quantas vezes a pessoa enviou o formulário (envios repetidos são juntados) */
+  submissions?: number;
+  last_submission_at?: string | null;
 };
 
 export const STATUS_LABEL: Record<Status, string> = {

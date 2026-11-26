@@ -93,14 +93,37 @@ export async function handleLead(body: unknown, env: LeadEnv, ip?: string): Prom
   const headers: Record<string, string> = {
     apikey: key,
     "Content-Type": "application/json",
-    Prefer: "return=minimal",
   };
   if (key.startsWith("eyJ")) headers.Authorization = `Bearer ${key}`; // chave "anon" antiga (JWT)
 
   try {
-    const response = await fetch(`${url}/rest/v1/leads`, {
+    // Caminho principal: função do banco que junta envios repetidos do mesmo WhatsApp
+    const rpc = await fetch(`${url}/rest/v1/rpc/submit_lead`, {
       method: "POST",
       headers,
+      body: JSON.stringify({
+        p_name: lead.name,
+        p_whatsapp: lead.whatsapp,
+        p_interest: lead.interest || null,
+        p_source: lead.source,
+      }),
+    });
+    if (rpc.ok) return { status: 201, body: { ok: true } };
+
+    const errorText = await rpc.text();
+    if (errorText.includes("Muitos envios")) {
+      return { status: 429, body: { message: "Muitos envios agora. Tente de novo em alguns minutos ou chame no WhatsApp." } };
+    }
+    // Plano B: banco ainda sem a função (schema.sql antigo) → grava direto, como antes
+    const missingFunction = rpc.status === 404 || errorText.includes("PGRST202");
+    if (!missingFunction) {
+      console.error("[leads] Supabase recusou o lead:", rpc.status, errorText);
+      return { status: 502, body: { message: TRY_WHATSAPP } };
+    }
+
+    const response = await fetch(`${url}/rest/v1/leads`, {
+      method: "POST",
+      headers: { ...headers, Prefer: "return=minimal" },
       body: JSON.stringify({
         name: lead.name,
         whatsapp: lead.whatsapp,

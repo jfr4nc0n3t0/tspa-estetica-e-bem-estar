@@ -151,6 +151,12 @@ export default function Leads() {
           <Badge>{SOURCE_LABEL[lead.source]}</Badge>
         </div>
         {lead.interest && <p className="mt-1 text-sm text-foreground/80">{lead.interest}</p>}
+        {((lead.submissions ?? 1) > 1 || lead.client_id) && (
+          <p className="mt-1.5 flex flex-wrap gap-1.5">
+            {(lead.submissions ?? 1) > 1 && <Badge className="bg-primary/10 text-primary">enviou {lead.submissions}×</Badge>}
+            {lead.client_id && lead.stage !== "agendou" && <Badge className="bg-accent text-accent-foreground">já é cliente</Badge>}
+          </p>
+        )}
         <p className="mt-1 text-xs text-muted-foreground">
           {phone(lead.whatsapp)} · {formatDistanceToNow(parseISO(lead.created_at), { locale: ptBR, addSuffix: true })}
         </p>

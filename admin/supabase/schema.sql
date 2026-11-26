@@ -363,6 +363,104 @@ create index if not exists leads_stage_idx on public.leads (stage, created_at de
 -- Último contato com o lead (WhatsApp ou mudança de etapa): mede se ele está quente ou esfriando.
 alter table public.leads add column if not exists last_contact_at timestamptz;
 
+-- Envios repetidos do formulário: quantas vezes a pessoa enviou e quando foi o último
+alter table public.leads add column if not exists submissions integer not null default 1;
+alter table public.leads add column if not exists last_submission_at timestamptz;
+update public.leads set last_submission_at = created_at where last_submission_at is null;
+alter table public.leads alter column last_submission_at set default now();
+
+-- Telefone "comparável": só dígitos e sem o 55 do Brasil (8399999… = 558399999…)
+create or replace function public.phone_key(phone text)
+returns text
+language sql
+immutable
+as $$
+  select case
+    when length(d) >= 12 and left(d, 2) = '55' then substr(d, 3)
+    else d
+  end
+  from (select regexp_replace(coalesce(phone, ''), '\D', '', 'g') as d) x;
+$$;
+
+-- Recebe o formulário do site (tspa.com.br/agendar). Única porta de entrada do visitante:
+-- ele não lê nada, só envia. Junta envios repetidos do mesmo WhatsApp.
+--   'novo'       → lead novo
+--   'cliente'    → lead novo, já ligado à cliente cadastrada com esse WhatsApp
+--   'atualizado' → já havia lead em aberto com esse número: junta os interesses e anota
+--   'ignorado'   → o mesmo número enviou há menos de 10 minutos
+create or replace function public.submit_lead(
+  p_name text,
+  p_whatsapp text,
+  p_interest text default null,
+  p_source text default 'site'
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_name text := btrim(coalesce(p_name, ''));
+  v_digits text := regexp_replace(coalesce(p_whatsapp, ''), '\D', '', 'g');
+  v_key text := public.phone_key(p_whatsapp);
+  v_interest text := nullif(btrim(coalesce(p_interest, '')), '');
+  v_source text := case when p_source in ('instagram', 'whatsapp', 'indicacao', 'google', 'site', 'outro') then p_source else 'site' end;
+  v_open public.leads;
+  v_client uuid;
+  v_when text := to_char(now() at time zone 'America/Sao_Paulo', 'DD/MM "às" HH24:MI');
+  v_merged text;
+begin
+  if char_length(v_name) not between 2 and 100
+     or char_length(v_digits) not between 10 and 13
+     or char_length(coalesce(v_interest, '')) > 300 then
+    raise exception 'Dados inválidos' using errcode = '22023';
+  end if;
+
+  -- Proteção geral: no máximo 30 envios por hora (robôs que chamem a API direto)
+  if (select count(*) from public.leads where last_submission_at > now() - interval '1 hour') >= 30 then
+    raise exception 'Muitos envios' using errcode = 'P0001';
+  end if;
+
+  select * into v_open
+  from public.leads
+  where public.phone_key(whatsapp) = v_key and stage in ('novo', 'em_contato')
+  order by created_at desc
+  limit 1;
+
+  if found then
+    if v_open.last_submission_at > now() - interval '10 minutes' then
+      return 'ignorado';
+    end if;
+    -- Junta os interesses sem repetir
+    select string_agg(item, ', ' order by first_pos)
+    into v_merged
+    from (
+      select btrim(item) as item, min(pos) as first_pos
+      from unnest(string_to_array(concat_ws(', ', v_open.interest, v_interest), ',')) with ordinality as t(item, pos)
+      where btrim(item) <> ''
+      group by btrim(item)
+    ) u;
+    update public.leads
+    set interest = left(v_merged, 300),
+        notes = concat_ws(E'\n', notes, 'Enviou o formulário de novo em ' || v_when || '.'),
+        submissions = submissions + 1,
+        last_submission_at = now()
+    where id = v_open.id;
+    return 'atualizado';
+  end if;
+
+  select id into v_client from public.clients where public.phone_key(whatsapp) = v_key limit 1;
+
+  insert into public.leads
+    (name, whatsapp, interest, source, consent, consent_at, client_id, notes, last_submission_at)
+  values
+    (v_name, v_digits, v_interest, v_source, true, now(), v_client,
+     case when v_client is not null then 'Já é cliente.' end, now());
+
+  return case when v_client is not null then 'cliente' else 'novo' end;
+end;
+$$;
+
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
@@ -424,16 +522,8 @@ begin
 end;
 $$;
 
+-- O visitante não grava direto na tabela: só pela função submit_lead (que junta repetidos)
 drop policy if exists public_insert_lead on public.leads;
-create policy public_insert_lead on public.leads
-  for insert to anon
-  with check (
-    stage = 'novo'
-    and consent = true
-    and client_id is null
-    and notes is null
-    and is_sample = false
-  );
 
 -- Permissões: o visitante anônimo não acessa nada além de inserir lead.
 revoke all on all tables in schema public from anon;
@@ -441,7 +531,8 @@ alter default privileges in schema public revoke all on tables from anon;
 
 grant select, insert, update, delete on all tables in schema public to authenticated;
 revoke all on public.admin_users from authenticated;
-grant insert (name, whatsapp, source, interest, consent, consent_at) on public.leads to anon;
+revoke all on function public.submit_lead(text, text, text, text) from public;
+grant execute on function public.submit_lead(text, text, text, text) to anon, authenticated;
 
 grant execute on function public.is_admin() to authenticated;
 
@@ -574,6 +665,7 @@ begin
     ('Sofia Nunes (exemplo)',    '83999990104', 'google',    'Drenagem Linfática',      'Pediu valores.',      'em_contato', true, now(), true, now() - interval '12 days',  now() - interval '9 days'),
     ('Helena Prado (exemplo)',   '83999990105', 'instagram', 'Limpeza de Pele',         null,                  'agendou',    true, now(), true, now() - interval '6 days',   now() - interval '5 days'),
     ('Tatiane Melo (exemplo)',   '83999990106', 'whatsapp',  'Head Spa Essencial',      'Achou longe.',        'perdido',    true, now(), true, now() - interval '9 days',   now() - interval '8 days');
+  update public.leads set last_submission_at = created_at where is_sample;
 end;
 $$;
 
