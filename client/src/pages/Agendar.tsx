@@ -15,6 +15,7 @@ const HOW_FOUND: { value: Source; label: string }[] = [
   { value: "instagram", label: "Instagram" },
   { value: "indicacao", label: "Indicação de alguém" },
   { value: "google", label: "Google" },
+  { value: "site", label: "Pelo site" },
   { value: "outro", label: "Outro" },
 ];
 
