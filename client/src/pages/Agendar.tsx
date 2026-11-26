@@ -70,6 +70,8 @@ export default function Agendar() {
   const [error, setError] = useState<string | null>(null);
   const startedAt = useRef(Date.now());
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // Cada verificação vale uma vez: depois de um envio com erro, pede uma nova
+  const [turnstileRound, setTurnstileRound] = useState(0);
 
   // Várias escolhas; "Ainda não sei" não combina com as outras
   function toggleInterest(item: string) {
@@ -115,6 +117,10 @@ export default function Agendar() {
       setStatus("sent");
     } catch (err) {
       setStatus("idle");
+      if (TURNSTILE_SITE_KEY) {
+        setTurnstileToken(null);
+        setTurnstileRound((n) => n + 1);
+      }
       setError(err instanceof Error ? err.message : "Não conseguimos enviar agora.");
     }
   }
@@ -226,7 +232,7 @@ export default function Agendar() {
                 </span>
               </label>
 
-              {TURNSTILE_SITE_KEY && <Turnstile siteKey={TURNSTILE_SITE_KEY} onToken={setTurnstileToken} />}
+              {TURNSTILE_SITE_KEY && <Turnstile siteKey={TURNSTILE_SITE_KEY} onToken={setTurnstileToken} round={turnstileRound} />}
 
               {error && (
                 <p className="rounded-2xl bg-taupe/10 px-4 py-3 text-sm text-taupe" role="alert">
@@ -339,12 +345,20 @@ function InterestSelect({ selected, onToggle, onClear }: { selected: string[]; o
 
 type TurnstileApi = {
   render: (el: HTMLElement, options: Record<string, unknown>) => string;
+  reset: (id: string) => void;
   remove: (id: string) => void;
 };
 
 /** Verificação "não sou robô" da Cloudflare. Na maioria das vezes resolve sozinha, sem a pessoa clicar. */
-function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (token: string | null) => void }) {
+function Turnstile({ siteKey, onToken, round }: { siteKey: string; onToken: (token: string | null) => void; round: number }) {
   const ref = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<string | null>(null);
+
+  // Nova rodada (após um envio com erro): gera um token novo no mesmo widget
+  useEffect(() => {
+    const w = window as unknown as { turnstile?: TurnstileApi };
+    if (round > 0 && widgetRef.current && w.turnstile) w.turnstile.reset(widgetRef.current);
+  }, [round]);
 
   useEffect(() => {
     let widgetId: string | null = null;
@@ -355,12 +369,14 @@ function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (token: str
       if (cancelled || !ref.current || !w.turnstile) return;
       widgetId = w.turnstile.render(ref.current, {
         sitekey: siteKey,
+        action: "lead", // conferido no servidor (TURNSTILE_ACTION)
         appearance: "interaction-only",
         language: "pt-br",
         callback: (token: string) => onToken(token),
         "expired-callback": () => onToken(null),
         "error-callback": () => onToken(null),
       });
+      widgetRef.current = widgetId;
     };
 
     if (w.turnstile) mount();

@@ -24,24 +24,39 @@ export type LeadEnv = {
   SUPABASE_URL?: string;
   SUPABASE_PUBLIC_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
+  /** Opcional: endereços aceitos, separados por vírgula (ex.: "tspa.com.br,www.tspa.com.br") */
+  TURNSTILE_HOSTNAMES?: string;
 };
+
+/** Nome da ação do widget no formulário (o servidor confere). */
+export const TURNSTILE_ACTION = "lead";
 
 export type LeadResult = { status: number; body: { ok?: true; message?: string } };
 
 const TRY_WHATSAPP = "Não conseguimos enviar agora. Tente de novo ou chame no WhatsApp.";
 
-/** Confere o "não sou robô" da Cloudflare. Sem chave configurada, não bloqueia. */
-async function turnstileOk(secret: string | undefined, token: string | undefined, ip: string | undefined) {
+/** Confere o "não sou robô" da Cloudflare. Sem chave secreta configurada, não bloqueia. */
+async function turnstileOk(env: LeadEnv, token: string | undefined, ip: string | undefined) {
+  const secret = env.TURNSTILE_SECRET_KEY?.trim();
   if (!secret) return true;
   if (!token) return false;
-  const form = new FormData();
-  form.append("secret", secret);
-  form.append("response", token);
-  if (ip) form.append("remoteip", ip);
+  const form = new URLSearchParams({ secret, response: token });
+  if (ip) form.set("remoteip", ip);
   try {
-    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form });
-    const data = (await response.json()) as { success?: boolean };
-    return data.success === true;
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: form,
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return false;
+    const data = (await response.json()) as { success?: boolean; action?: string; hostname?: string };
+    if (data.success !== true) return false;
+    // O token precisa ter sido gerado por este formulário…
+    if (data.action && data.action !== TURNSTILE_ACTION) return false;
+    // …e, se configurado, num dos endereços do site
+    const hostnames = (env.TURNSTILE_HOSTNAMES ?? "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+    if (hostnames.length && !hostnames.includes((data.hostname ?? "").toLowerCase())) return false;
+    return true;
   } catch {
     return false;
   }
@@ -63,7 +78,7 @@ export async function handleLead(body: unknown, env: LeadEnv, ip?: string): Prom
     return { status: 201, body: { ok: true } };
   }
 
-  if (!(await turnstileOk(env.TURNSTILE_SECRET_KEY, lead.turnstileToken, ip))) {
+  if (!(await turnstileOk(env, lead.turnstileToken, ip))) {
     return { status: 400, body: { message: "Não conseguimos confirmar que você não é um robô. Recarregue a página e tente de novo." } };
   }
 

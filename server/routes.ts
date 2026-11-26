@@ -28,8 +28,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (isRateLimited(req)) {
       return res.status(429).json({ message: "Muitos envios seguidos. Tente de novo em alguns minutos ou chame no WhatsApp." });
     }
-    const { SUPABASE_URL, SUPABASE_PUBLIC_KEY, TURNSTILE_SECRET_KEY } = process.env;
-    const result = await handleLead(req.body, { SUPABASE_URL, SUPABASE_PUBLIC_KEY, TURNSTILE_SECRET_KEY }, req.ip);
+    const { SUPABASE_URL, SUPABASE_PUBLIC_KEY, TURNSTILE_SECRET_KEY, TURNSTILE_HOSTNAMES } = process.env;
+    const env = { SUPABASE_URL, SUPABASE_PUBLIC_KEY, TURNSTILE_SECRET_KEY, TURNSTILE_HOSTNAMES };
+    const result = await handleLead(req.body, env, req.ip);
     return res.status(result.status).json(result.body);
   });
 

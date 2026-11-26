@@ -38,19 +38,26 @@ na Cloudflare, no plano grátis. O registro do domínio continua no Registro.br 
 
 > Mudou alguma variável depois? **Deployments** → **Retry deployment** para ela valer.
 
-## 2. (Opcional, recomendado) Proteção "não sou robô" com Turnstile
+## 2. Proteção "não sou robô" com Turnstile
 
 Grátis e quase sempre invisível para quem preenche. Substitui o limite de envios que existia no Render.
+O widget **já foi criado** (Site Key `0x4AAAAAAGUQ_qib4b2dipv4`); falta só ligar no projeto.
 
-1. Cloudflare → **Turnstile** → **Add widget**:
-   - **Widget name:** `TSpa formulário`
-   - **Hostnames:** `tspa.com.br`, `www.tspa.com.br`, `tspa-site.pages.dev`
-   - **Widget Mode:** `Managed`
-2. Copie as duas chaves e adicione no projeto `tspa-site` (**Settings** → **Variables and Secrets**):
-   - `VITE_TURNSTILE_SITE_KEY` = a **Site Key** (pública, vai para a página)
-   - `TURNSTILE_SECRET_KEY` = a **Secret Key** (marque como **Encrypt**/secret)
-3. **Retry deployment**. O formulário passa a exigir a verificação; sem as chaves, ele funciona só com
-   o campo escondido e o tempo mínimo de preenchimento.
+1. Cloudflare → **Turnstile** → abra o widget → confira em **Hostname Management** que estão cadastrados
+   `tspa.com.br`, `www.tspa.com.br` e o endereço do projeto (ex.: `tspa-site.pages.dev`). Sem isso, o
+   formulário não libera o botão de enviar nesse endereço.
+2. No projeto `tspa-site` → **Settings** → **Variables and Secrets** → **Add**:
+   - `VITE_TURNSTILE_SITE_KEY` = `0x4AAAAAAGUQ_qib4b2dipv4` (pública, vai para a página)
+   - `TURNSTILE_SECRET_KEY` = a **Secret Key** do widget → tipo **Secret** (nunca compartilhe; não cole em chats)
+   - `TURNSTILE_HOSTNAMES` = `tspa.com.br,www.tspa.com.br,tspa-site.pages.dev` (opcional; o servidor só aceita
+     verificações feitas nesses endereços)
+3. **Deployments** → **Retry deployment** (a Site Key entra no site na hora do build).
+4. Teste em `https://tspa-site.pages.dev/agendar`: preencha e espere um instante; o botão libera sozinho e o
+   envio aparece em **Leads**.
+
+> No computador (`npm run dev`), o widget só aparece se você definir `VITE_TURNSTILE_SITE_KEY`. Para testes
+> use a chave pública de teste da Cloudflare `1x00000000000000000000AA` (e, no servidor,
+> `TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA`), que sempre aprova.
 
 ## 3. Passar o DNS do domínio para a Cloudflare
 
