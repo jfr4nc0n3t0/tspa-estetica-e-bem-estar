@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { CalendarDays, Ellipsis, Sprout, Users, Wallet } from "lucide-react";
+import { useAppData } from "../lib/appData";
 import { cx } from "./ui";
 
 const NAV = [
@@ -14,6 +15,17 @@ const NAV = [
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const isActive = (href: string) => location === href || location.startsWith(`${href}/`);
+  const { pending } = useAppData();
+  /** Selo de pendências no item Agenda */
+  const badge = (href: string) =>
+    href === "/agenda" && pending.length > 0 ? (
+      <span
+        className="absolute -right-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-ochre px-1 text-[0.65rem] font-semibold leading-none text-background tabular-nums"
+        aria-label={`${pending.length} atendimento(s) esperando status`}
+      >
+        {pending.length > 99 ? "99+" : pending.length}
+      </span>
+    ) : null;
 
   return (
     <div className="min-h-[100svh] md:flex">
@@ -31,7 +43,10 @@ export function Layout({ children }: { children: ReactNode }) {
                 isActive(href) ? "bg-primary text-primary-foreground" : "text-foreground/75 hover:bg-muted",
               )}
             >
-              <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+              <span className="relative">
+                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                {badge(href)}
+              </span>
               {label}
             </Link>
           ))}
@@ -57,7 +72,10 @@ export function Layout({ children }: { children: ReactNode }) {
                 aria-current={active ? "page" : undefined}
               >
                 <span className={cx("grid h-7 w-12 place-items-center rounded-full transition-colors", active && "bg-primary/12 bg-primary/10")}>
-                  <Icon className="h-5 w-5" aria-hidden="true" />
+                  <span className="relative">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    {badge(href)}
+                  </span>
                 </span>
                 {label}
               </Link>

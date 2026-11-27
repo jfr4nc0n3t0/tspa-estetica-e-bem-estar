@@ -12,16 +12,18 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { Banknote, CheckCheck, ChevronLeft, ChevronRight, CircleCheck, Clock, Droplets, Plus, UserX } from "lucide-react";
+import { AlertCircle, Banknote, CheckCheck, ChevronLeft, ChevronRight, CircleCheck, Clock, ClockAlert, Droplets, Plus, UserX } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
 import { Button, Card, ErrorBox, PageHeader, SectionTitle, Segmented, Spinner, Stat, cx } from "../components/ui";
 import { useAppData } from "../lib/appData";
 import { brlRound, cap, durationBetween, fmt, minutesOfDay, timeToMinutes, toDateInput } from "../lib/format";
 import { useLoad } from "../lib/hooks";
+import { isPending, useNowTs } from "../lib/pending";
 import { slotTimes, SLOT_MINUTES } from "../lib/slots";
 import { run, supabase } from "../lib/supabase";
 import { ACTIVE_STATUSES, STATUS_LABEL, type Appointment, type Settings, type Status } from "../lib/types";
 import { AppointmentSheet, type AppointmentDefaults } from "./AppointmentSheet";
+import { PendingSheet } from "./PendingSheet";
 
 const ROW = 52; // altura em px de cada bloco de 30 min
 const WEEK_ROW = 44; // na semana, blocos um pouco mais baixos
@@ -46,11 +48,16 @@ function useProfessionalLabel() {
   return (a: Appointment) => (multi && a.professional_id ? professionalName(a.professional_id).split(" ")[0] : "");
 }
 
+/** Status como aparece na tela: "pendente" = já terminou e segue agendado/confirmado */
+type DisplayStatus = Status | "pendente";
+const shown = (a: Appointment, now: string): DisplayStatus => (isPending(a, now) ? "pendente" : a.status);
+
 const weekOf = (d: Date) => startOfWeek(d, { weekStartsOn: 1 });
 const byDay = (appts: Appointment[], d: Date) => appts.filter((a) => a.starts_at.startsWith(toDateInput(d)));
 
 export default function Agenda() {
-  const { settings, professionals } = useAppData();
+  const { settings, professionals, pending, refreshPending } = useAppData();
+  const [pendingOpen, setPendingOpen] = useState(false);
   const activeProfessionals = Math.max(1, professionals.filter((p) => p.active).length);
   const [, navigate] = useLocation();
   const search = useSearch();
@@ -97,6 +104,12 @@ export default function Agenda() {
     const params = new URLSearchParams(search);
     const clientId = params.get("cliente");
     const leadId = params.get("lead");
+    // Vindo da notificação de fim do dia (?pendentes=1): abre a lista de pendentes
+    if (params.get("pendentes")) {
+      setPendingOpen(true);
+      navigate("/agenda", { replace: true });
+      return;
+    }
     if (clientId || leadId) {
       setSheet({ defaults: { clientId: clientId ?? undefined, leadId: leadId ?? undefined, date: toDateInput(day) } });
       navigate("/agenda", { replace: true });
@@ -157,6 +170,25 @@ export default function Agenda() {
           </Button>
         }
       />
+
+      {pending.length > 0 && (
+        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-ochre/35 bg-ochre/10 px-4 py-3" role="status">
+          <ClockAlert className="h-5 w-5 shrink-0 text-ochre" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium">
+              {pending.length === 1 ? "1 atendimento esperando status" : `${pending.length} atendimentos esperando status`}
+            </p>
+            <p className="text-xs text-muted-foreground">Já passaram do horário e continuam como agendados.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPendingOpen(true)}
+            className="h-9 shrink-0 rounded-full border border-ochre px-3.5 text-sm font-medium text-ochre hover:bg-ochre/10"
+          >
+            Resolver
+          </button>
+        </div>
+      )}
 
       <Segmented
         value={view}
@@ -279,9 +311,22 @@ export default function Agenda() {
       <AppointmentSheet
         open={sheet !== null}
         onClose={() => setSheet(null)}
-        onSaved={reload}
+        onSaved={() => {
+          reload();
+          refreshPending().catch(() => {});
+        }}
         appointment={sheet?.appointment}
         defaults={sheet?.defaults}
+      />
+
+      <PendingSheet
+        open={pendingOpen}
+        onClose={() => setPendingOpen(false)}
+        onChanged={reload}
+        onOpenAppointment={(appointment) => {
+          setPendingOpen(false);
+          setSheet({ appointment });
+        }}
       />
     </>
   );
@@ -297,6 +342,7 @@ function WeekGrid({ weekStart, settings, appointments, onSlot, onOpen, onDay }: 
   onDay: (date: Date) => void;
 }) {
   const proLabel = useProfessionalLabel();
+  const now = useNowTs();
   const open = timeToMinutes(settings.open_time);
   const close = timeToMinutes(settings.close_time);
   const slots = slotTimes(settings);
@@ -361,7 +407,7 @@ function WeekGrid({ weekStart, settings, appointments, onSlot, onOpen, onDay }: 
                     className={cx(
                       "absolute z-[1] overflow-hidden rounded-lg border-l-[3px] px-1.5 py-1 text-left text-[0.7rem] leading-tight shadow-sm",
                       !split ? "inset-x-0.5" : a.room === 1 ? "left-0.5 right-1/2 mr-px" : "left-1/2 right-0.5 ml-px",
-                      STATUS_STYLE[a.status],
+                      STATUS_STYLE[shown(a, now)],
                     )}
                     title={`${fmt(a.starts_at, "HH:mm")}–${fmt(a.ends_at, "HH:mm")} · ${a.clients?.name ?? ""} · ${a.service_name} · Sala ${a.room}${proLabel(a) ? ` · ${proLabel(a)}` : ""}`}
                   >
@@ -373,7 +419,7 @@ function WeekGrid({ weekStart, settings, appointments, onSlot, onOpen, onDay }: 
                     <span className="block truncate font-semibold">{a.clients?.name ?? "Cliente"}</span>
                     <span className="block truncate opacity-80">{a.service_name}</span>
                     {proLabel(a) && <span className="block truncate opacity-70">{proLabel(a)}</span>}
-                    <StatusLine status={a.status} />
+                    <StatusLine status={shown(a, now)} />
                   </button>
                 );
               })}
@@ -393,6 +439,7 @@ function WeekList({ weekStart, appointments, onOpen, onDay }: {
   onDay: (date: Date) => void;
 }) {
   const proLabel = useProfessionalLabel();
+  const now = useNowTs();
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   return (
     <div className="space-y-3">
@@ -413,7 +460,7 @@ function WeekList({ weekStart, appointments, onOpen, onDay }: {
                 {list.map((a) => (
                   <li key={a.id}>
                     <button type="button" onClick={() => onOpen(a)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/50">
-                      <span className={cx("h-8 w-1 shrink-0 rounded-full", STATUS_DOT[a.status])} aria-hidden="true" />
+                      <span className={cx("h-8 w-1 shrink-0 rounded-full", STATUS_DOT[shown(a, now)])} aria-hidden="true" />
                       <span className="w-12 shrink-0 text-sm font-semibold tabular-nums">{fmt(a.starts_at, "HH:mm")}</span>
                       <span className={cx("min-w-0 flex-1", a.status === "cancelado" && "text-muted-foreground line-through")}>
                         <span className="block truncate text-sm font-medium">{a.clients?.name ?? "Cliente"}</span>
@@ -424,7 +471,7 @@ function WeekList({ weekStart, appointments, onOpen, onDay }: {
                         </span>
                       </span>
                       <span className="flex shrink-0 flex-col items-end gap-0.5 text-xs">
-                        <StatusLine status={a.status} />
+                        <StatusLine status={shown(a, now)} />
                         {a.paid && <Banknote className="h-3.5 w-3.5 text-primary" aria-label="Pago" />}
                       </span>
                     </button>
@@ -441,6 +488,7 @@ function WeekList({ weekStart, appointments, onOpen, onDay }: {
 
 /* ---------- Mês: calendário ---------- */
 function MonthGrid({ month, appointments, onDay }: { month: Date; appointments: Appointment[]; onDay: (date: Date) => void }) {
+  const now = useNowTs();
   const start = weekOf(startOfMonth(month));
   const end = endOfWeek(endOfMonth(month), { weekStartsOn: 1 });
   const days: Date[] = [];
@@ -491,7 +539,7 @@ function MonthGrid({ month, appointments, onDay }: { month: Date; appointments: 
               {/* Computador: primeiros horários */}
               <span className="hidden w-full space-y-0.5 md:block">
                 {list.slice(0, 3).map((a) => (
-                  <span key={a.id} className={cx("block truncate rounded px-1 text-[0.7rem] leading-[1.15rem]", STATUS_CHIP[a.status])}>
+                  <span key={a.id} className={cx("block truncate rounded px-1 text-[0.7rem] leading-[1.15rem]", STATUS_CHIP[shown(a, now)])}>
                     <span className="font-semibold tabular-nums">{fmt(a.starts_at, "HH:mm")}</span> {a.clients?.name?.split(" ")[0]}
                   </span>
                 ))}
@@ -509,8 +557,10 @@ function MonthGrid({ month, appointments, onDay }: { month: Date; appointments: 
    Agendado   = aguardando confirmação (ocre, borda tracejada)
    Confirmado = em aberto, confirmado (verde sálvia cheio)
    Concluído  = encerrado (cinza, apagado, com ✓)
-   Faltou     = terracota */
-const STATUS_DOT: Record<Status, string> = {
+   Faltou     = terracota
+   Pendente   = já terminou e segue agendado/confirmado (ocre forte, pede ação) */
+const STATUS_DOT: Record<DisplayStatus, string> = {
+  pendente: "bg-ochre",
   agendado: "bg-ochre",
   confirmado: "bg-primary",
   concluido: "bg-muted-foreground/40",
@@ -518,7 +568,8 @@ const STATUS_DOT: Record<Status, string> = {
   cancelado: "bg-border",
 };
 
-const STATUS_CHIP: Record<Status, string> = {
+const STATUS_CHIP: Record<DisplayStatus, string> = {
+  pendente: "border border-ochre bg-ochre/25 font-medium",
   agendado: "border border-dashed border-ochre/70 bg-ochre/10",
   confirmado: "bg-primary/25",
   concluido: "bg-muted text-muted-foreground line-through decoration-muted-foreground/40",
@@ -526,7 +577,8 @@ const STATUS_CHIP: Record<Status, string> = {
   cancelado: "hidden",
 };
 
-const STATUS_STYLE: Record<Status, string> = {
+const STATUS_STYLE: Record<DisplayStatus, string> = {
+  pendente: "border-2 border-dashed border-ochre border-l-ochre bg-ochre/15 text-foreground",
   agendado: "border border-dashed border-ochre/80 border-l-ochre bg-card text-foreground",
   confirmado: "border-primary bg-primary/25 text-foreground",
   concluido: "border-muted-foreground/30 bg-muted/70 text-muted-foreground",
@@ -534,7 +586,8 @@ const STATUS_STYLE: Record<Status, string> = {
   cancelado: "hidden",
 };
 
-const STATUS_TEXT: Record<Status, string> = {
+const STATUS_TEXT: Record<DisplayStatus, string> = {
+  pendente: "text-ochre",
   agendado: "text-ochre",
   confirmado: "text-primary",
   concluido: "text-muted-foreground",
@@ -543,9 +596,10 @@ const STATUS_TEXT: Record<Status, string> = {
 };
 
 /** Ícone e texto curto do status, mostrados em todos os blocos. */
-function StatusLine({ status, className }: { status: Status; className?: string }) {
-  const Icon = status === "concluido" ? CheckCheck : status === "confirmado" ? CircleCheck : status === "faltou" ? UserX : Clock;
-  const label = status === "agendado" ? "A confirmar" : STATUS_LABEL[status];
+function StatusLine({ status, className }: { status: DisplayStatus; className?: string }) {
+  const Icon =
+    status === "pendente" ? AlertCircle : status === "concluido" ? CheckCheck : status === "confirmado" ? CircleCheck : status === "faltou" ? UserX : Clock;
+  const label = status === "pendente" ? "Atualizar status" : status === "agendado" ? "A confirmar" : STATUS_LABEL[status];
   return (
     <span className={cx("flex items-center gap-1 font-medium", STATUS_TEXT[status], className)}>
       <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
@@ -555,13 +609,13 @@ function StatusLine({ status, className }: { status: Status; className?: string 
 }
 
 function StatusLegend() {
-  const items: Status[] = ["agendado", "confirmado", "concluido", "faltou"];
+  const items: DisplayStatus[] = ["agendado", "confirmado", "pendente", "concluido", "faltou"];
   return (
     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
       {items.map((st) => (
         <span key={st} className="flex items-center gap-1.5">
           <span className={cx("h-3.5 w-5 rounded-[5px] border-l-[3px]", STATUS_STYLE[st])} aria-hidden="true" />
-          {st === "agendado" ? "A confirmar" : STATUS_LABEL[st]}
+          {st === "pendente" ? "Atualizar status" : st === "agendado" ? "A confirmar" : STATUS_LABEL[st]}
         </span>
       ))}
       <span className="flex items-center gap-1.5">
@@ -579,6 +633,7 @@ function DayGrid({ day, settings, appointments, onSlot, onOpen }: {
   onOpen: (appointment: Appointment) => void;
 }) {
   const proLabel = useProfessionalLabel();
+  const nowStamp = useNowTs();
   const open = timeToMinutes(settings.open_time);
   const close = timeToMinutes(settings.close_time);
   const slots = slotTimes(settings);
@@ -646,7 +701,7 @@ function DayGrid({ day, settings, appointments, onSlot, onOpen }: {
                       style={{ top: top + 1.5, height: blockHeight }}
                       className={cx(
                         "absolute inset-x-1 z-[1] overflow-hidden rounded-xl border-l-4 px-2 py-1.5 text-left text-xs shadow-sm transition hover:brightness-[0.98]",
-                        STATUS_STYLE[a.status],
+                        STATUS_STYLE[shown(a, nowStamp)],
                       )}
                     >
                       <span className="flex items-center gap-1 font-semibold tabular-nums">
@@ -657,7 +712,7 @@ function DayGrid({ day, settings, appointments, onSlot, onOpen }: {
                       <span className="block truncate text-[0.8rem] font-semibold">{a.clients?.name ?? "Cliente"}</span>
                       <span className="block truncate opacity-80">{a.service_name}</span>
                       {proLabel(a) && <span className="block truncate opacity-70">{proLabel(a)}</span>}
-                      <StatusLine status={a.status} className="mt-0.5" />
+                      <StatusLine status={shown(a, nowStamp)} className="mt-0.5" />
                     </button>
                   );
                 })}

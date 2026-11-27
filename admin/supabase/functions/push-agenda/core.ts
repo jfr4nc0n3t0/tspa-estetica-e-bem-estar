@@ -19,6 +19,8 @@ type Appt = {
 const TZ = "America/Sao_Paulo";
 /** Até quanto tempo depois do horário ainda vale mandar o resumo (se o agendador atrasar) */
 const DAILY_WINDOW_MIN = 180;
+/** Aviso de pendências: quantos minutos depois do fechamento */
+const PENDING_AFTER_CLOSE_MIN = 30;
 
 /** "Agora" no horário do spa: { date: "2026-11-27", time: "07:31", ts: "2026-11-27T07:31:00" } */
 export function spaNow(now: Date) {
@@ -64,6 +66,15 @@ export function reminderPayload(a: Appt, nowTs: string): Payload {
   };
 }
 
+export function pendingPayload(count: number): Payload {
+  return {
+    title: count === 1 ? "1 atendimento de hoje sem status" : `${count} atendimentos de hoje sem status`,
+    body: "Toque para marcar como concluído, faltou ou cancelado.",
+    url: "/agenda?pendentes=1",
+    tag: "pendencias",
+  };
+}
+
 /** Marca como enviado. Retorna false se outro disparo já marcou (evita mandar duas vezes). */
 async function claim(db: SupabaseClient, kind: "resumo" | "lembrete", ref: string) {
   const { data, error } = await db.from("push_log").upsert({ kind, ref }, { onConflict: "kind,ref", ignoreDuplicates: true }).select("ref");
@@ -85,7 +96,7 @@ async function broadcast(db: SupabaseClient, subs: Subscription[], send: SendFn,
   return delivered;
 }
 
-export type RunResult = { subscriptions: number; daily: number; reminders: number; test: boolean; delivered: number; failures: string[] };
+export type RunResult = { subscriptions: number; daily: number; reminders: number; pending: number; test: boolean; delivered: number; failures: string[] };
 
 /**
  * Roda a cada poucos minutos: manda o resumo do dia (uma vez, no horário dos ajustes)
@@ -93,7 +104,7 @@ export type RunResult = { subscriptions: number; daily: number; reminders: numbe
  */
 export async function runNotifications(db: SupabaseClient, send: SendFn, opts: { now?: Date; test?: boolean } = {}): Promise<RunResult> {
   const now = spaNow(opts.now ?? new Date());
-  const result: RunResult = { subscriptions: 0, daily: 0, reminders: 0, test: Boolean(opts.test), delivered: 0, failures: [] };
+  const result: RunResult = { subscriptions: 0, daily: 0, reminders: 0, pending: 0, test: Boolean(opts.test), delivered: 0, failures: [] };
 
   const { data: subs, error: subsError } = await db.from("push_subscriptions").select("id, endpoint, p256dh, auth");
   if (subsError) throw subsError;
@@ -110,7 +121,7 @@ export async function runNotifications(db: SupabaseClient, send: SendFn, opts: {
     return result;
   }
 
-  const { data: settings, error: settingsError } = await db.from("settings").select("notify_daily_time, notify_before_min").eq("id", 1).single();
+  const { data: settings, error: settingsError } = await db.from("settings").select("notify_daily_time, notify_before_min, close_time").eq("id", 1).single();
   if (settingsError) throw settingsError;
 
   const select = "id, starts_at, service_name, room, clients(name)";
@@ -130,6 +141,20 @@ export async function runNotifications(db: SupabaseClient, send: SendFn, opts: {
     if (error) throw error;
     const appts = (data ?? []) as unknown as Appt[];
     if (appts.length) result.daily = await broadcast(db, subs, send, dailyPayload(appts));
+  }
+
+  // Fim do dia: atendimentos de hoje que já terminaram e seguem sem status final.
+  // Usa o registro "resumo" com a chave "pendencias:<data>" (não precisa de tabela nova).
+  const pendingAt = toMin(String(settings.close_time).slice(0, 5)) + PENDING_AFTER_CLOSE_MIN;
+  if (nowMin >= pendingAt && nowMin < pendingAt + DAILY_WINDOW_MIN && (await claim(db, "resumo", `pendencias:${now.date}`))) {
+    const { count, error } = await db
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .in("status", active)
+      .gte("starts_at", `${now.date}T00:00:00`)
+      .lte("ends_at", now.ts);
+    if (error) throw error;
+    if (count) result.pending = await broadcast(db, subs, send, pendingPayload(count));
   }
 
   // Lembretes: atendimentos que começam entre agora e agora + N minutos

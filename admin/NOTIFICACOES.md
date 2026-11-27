@@ -4,6 +4,8 @@ O painel avisa no celular, mesmo fechado:
 
 - **Resumo do dia** no horário escolhido (padrão 7h30): "Hoje: 3 atendimentos" com horário, primeiro nome e serviço.
 - **Lembrete** antes de cada atendimento (padrão 30 min): "Em 30 min · 10:00 — Carla · Massagem Relaxante · Sala 1".
+- **Pendências no fim do dia** (30 min depois do fechamento): "2 atendimentos de hoje sem status". Tocando, abre a
+  Agenda já na lista para marcar Concluído, Faltou ou Cancelado.
 
 Dia sem atendimento não gera aviso. Cancelados e faltas não avisam. Se remarcar, o lembrete vale para o horário novo.
 Horário e antecedência ficam em **Mais → Notificações** no painel.

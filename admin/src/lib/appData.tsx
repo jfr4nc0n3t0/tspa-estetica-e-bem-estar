@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { nowTs, OPEN_STATUSES } from "./pending";
 import { run, supabase } from "./supabase";
-import type { Professional, Service, Settings } from "./types";
+import type { Appointment, Professional, Service, Settings } from "./types";
 
 type AppData = {
   settings: Settings;
@@ -12,6 +13,9 @@ type AppData = {
   refreshSettings: () => Promise<void>;
   refreshServices: () => Promise<void>;
   refreshProfessionals: () => Promise<void>;
+  /** Atendimentos que já terminaram e ainda estão como agendado/confirmado (mais antigos primeiro) */
+  pending: Appointment[];
+  refreshPending: () => Promise<void>;
 };
 
 const AppDataContext = createContext<AppData | null>(null);
@@ -22,6 +26,7 @@ export function AppDataProvider({ email, children }: { email: string; children: 
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [services, setServices] = useState<Service[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [pending, setPending] = useState<Appointment[]>([]);
 
   const refreshSettings = useCallback(async () => {
     // "*" + padrão: se o banco ainda não tiver alguma coluna nova, o painel continua funcionando
@@ -39,6 +44,32 @@ export function AppDataProvider({ email, children }: { email: string; children: 
     setProfessionals((rows ?? []) as Professional[]);
   }, []);
 
+  const refreshPending = useCallback(async () => {
+    const rows = await run(
+      supabase
+        .from("appointments")
+        .select("*, clients(name, whatsapp)")
+        .in("status", OPEN_STATUSES)
+        .lte("ends_at", nowTs())
+        .order("starts_at")
+        .limit(200),
+    );
+    setPending((rows ?? []) as Appointment[]);
+  }, []);
+
+  // Pendências: confere ao abrir, a cada 2 minutos e quando o app volta para a frente
+  useEffect(() => {
+    const check = () => refreshPending().catch(() => {});
+    check();
+    const id = setInterval(check, 120_000);
+    const onVisible = () => document.visibilityState === "visible" && check();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [refreshPending]);
+
   useEffect(() => {
     refreshSettings().catch(() => {});
     refreshServices().catch(() => {});
@@ -52,7 +83,7 @@ export function AppDataProvider({ email, children }: { email: string; children: 
 
   return (
     <AppDataContext.Provider
-      value={{ settings, services, professionals, professionalName, email, refreshSettings, refreshServices, refreshProfessionals }}
+      value={{ settings, services, professionals, professionalName, email, refreshSettings, refreshServices, refreshProfessionals, pending, refreshPending }}
     >
       {children}
     </AppDataContext.Provider>
