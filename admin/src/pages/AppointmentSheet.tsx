@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { addDays, addMinutes, parseISO } from "date-fns";
-import { Check, MessageCircle, Plus, Trash2, X } from "lucide-react";
+import { Check, MessageCircle, Package, Plus, Trash2, X } from "lucide-react";
 import { Sheet } from "../components/Sheet";
 import { Button, Field, Input, Segmented, Select, Switch, Textarea } from "../components/ui";
 import { useConfirm } from "../components/Confirm";
@@ -19,6 +19,7 @@ import {
   type PaymentMethod,
   type Service,
   type Status,
+  type PackageUsage,
 } from "../lib/types";
 import { confirmationMessage, waLink } from "../lib/whatsapp";
 
@@ -59,6 +60,12 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
   const [status, setStatus] = useState<Status>("agendado");
   const [payment, setPayment] = useState<PaymentMethod | "">("");
   const [paid, setPaid] = useState(false);
+  const [paidAt, setPaidAt] = useState("");
+  // Pacotes da cliente e o que está sendo usado neste atendimento
+  const [clientPackages, setClientPackages] = useState<PackageUsage[]>([]);
+  const [packageId, setPackageId] = useState<string | null>(null);
+  const [packageTouched, setPackageTouched] = useState(false);
+  const today = toDateInput(new Date());
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +91,9 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
       setStatus(appointment.status);
       setPayment(appointment.payment_method ?? "");
       setPaid(appointment.paid);
+      setPaidAt(appointment.paid_at ?? "");
+      setPackageId(appointment.package_id ?? null);
+      setPackageTouched(true);
       setNotes(appointment.notes ?? "");
     } else {
       setClientMode("existing");
@@ -99,6 +109,9 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
       setStatus("agendado");
       setPayment("");
       setPaid(false);
+      setPaidAt("");
+      setPackageId(null);
+      setPackageTouched(false);
       setNotes("");
     }
     setLead(null);
@@ -169,6 +182,58 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
     return byPhone ? { client: byPhone, by: "whatsapp" as const } : byName ? { client: byName, by: "nome" as const } : null;
   }, [clientMode, clients, newName, newWhatsapp]);
 
+  // Pacotes da cliente escolhida
+  useEffect(() => {
+    if (!open || clientMode !== "existing" || !clientId) {
+      setClientPackages([]);
+      return;
+    }
+    let cancelled = false;
+    run(supabase.from("package_usage").select("*").eq("client_id", clientId).order("paid_at"))
+      .then((rows) => !cancelled && setClientPackages(rows as PackageUsage[]))
+      .catch(() => !cancelled && setClientPackages([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [open, clientMode, clientId]);
+
+  /** Pacote que serve para este atendimento: mesmo serviço (um só), com sessão livre e válido na data */
+  const eligiblePackage = useMemo(() => {
+    if (selectedServices.length !== 1) return undefined;
+    const serviceId = selectedServices[0].id;
+    return clientPackages.find(
+      (p) =>
+        p.service_id === serviceId &&
+        (p.id === appointment?.package_id || (p.state === "ativo" && p.available > 0)) &&
+        (!p.expires_at || p.expires_at >= date),
+    );
+  }, [clientPackages, selectedServices, appointment?.package_id, date]);
+  const usingPackage = packageId ? clientPackages.find((p) => p.id === packageId) : undefined;
+
+  // Novo atendimento: já usa o pacote quando existe um que serve (até a pessoa desligar)
+  useEffect(() => {
+    if (packageTouched) return;
+    setPackageId(eligiblePackage?.id ?? null);
+  }, [eligiblePackage, packageTouched]);
+
+  // Usando pacote: valor = valor por sessão do pacote
+  useEffect(() => {
+    if (usingPackage) setPrice(String(usingPackage.unit_price));
+  }, [usingPackage]);
+
+  function togglePackage(on: boolean) {
+    setPackageTouched(true);
+    if (on && eligiblePackage) {
+      setPackageId(eligiblePackage.id);
+    } else {
+      setPackageId(null);
+      setPaid(false);
+      setPaidAt("");
+      setPayment("");
+      setPrice(String(selectedServices.reduce((sum, s) => sum + Number(s.price), 0)));
+    }
+  }
+
   /** Troca a lista de serviços e soma duração e valor. */
   function applyServices(ids: string[]) {
     setServiceIds(ids);
@@ -191,7 +256,8 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
       return setError(professionals.some((p) => p.active) ? "Escolha a profissional." : "Cadastre uma profissional em Mais → Profissionais.");
     }
     if (Number.isNaN(priceValue) || priceValue < 0) return setError("Valor inválido.");
-    if (paid && !payment) return setError("Escolha a forma de pagamento para marcar como pago.");
+    if (!usingPackage && paid && !payment) return setError("Escolha a forma de pagamento para marcar como pago.");
+    if (paid && paidAt > today) return setError("A data do pagamento não pode ser no futuro.");
 
     const range = buildRange(date, time, durationMin);
 
@@ -241,8 +307,11 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
         professional_id: needsProfessional ? professionalId : null,
         price: priceValue,
         status,
-        payment_method: payment || null,
-        paid,
+        // Sessão de pacote: o banco marca como paga (na data da venda) e não cria nova entrada
+        package_id: usingPackage ? usingPackage.id : null,
+        payment_method: usingPackage ? "pacote" : payment || null,
+        paid: usingPackage ? true : paid,
+        paid_at: usingPackage ? null : paid ? paidAt || null : null,
         notes: notes.trim() || null,
       };
 
@@ -518,9 +587,27 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
           />
         </Field>
 
+        {(eligiblePackage || usingPackage) && (
+          <div className="flex items-center gap-3 rounded-2xl border border-primary/35 bg-primary/10 px-4 py-3">
+            <Package className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <Switch
+                checked={Boolean(usingPackage)}
+                onChange={togglePackage}
+                label={
+                  usingPackage && appointment?.package_id === usingPackage.id
+                    ? `Sessão do pacote de ${usingPackage.sessions}`
+                    : `Usar o pacote · sessão ${(eligiblePackage ?? usingPackage)!.used + (eligiblePackage ?? usingPackage)!.reserved + 1} de ${(eligiblePackage ?? usingPackage)!.sessions}`
+                }
+                description={usingPackage ? "Já pago na venda do pacote. Não gera nova entrada no Financeiro." : `${(eligiblePackage ?? usingPackage)!.available} sessão(ões) disponível(is) no pacote.`}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Valor (R$)">
-            <Input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
+          <Field label="Valor (R$)" hint={usingPackage ? "valor por sessão do pacote" : undefined}>
+            <Input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} readOnly={Boolean(usingPackage)} className={usingPackage ? "text-muted-foreground" : undefined} />
           </Field>
           <Field label="Status">
             <Select value={status} onChange={(e) => setStatus(e.target.value as Status)}>
@@ -533,25 +620,46 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
           </Field>
         </div>
 
-        <Field label="Forma de pagamento">
-          <Select value={payment} onChange={(e) => setPayment(e.target.value as PaymentMethod | "")}>
-            <option value="">Ainda não definida</option>
-            {(Object.keys(PAYMENT_LABEL) as PaymentMethod[]).map((p) => (
-              <option key={p} value={p}>
-                {PAYMENT_LABEL[p]}
-              </option>
-            ))}
-          </Select>
-        </Field>
-
-        <div className="rounded-xl bg-muted/60 px-4 py-3">
-          <Switch
-            checked={paid}
-            onChange={setPaid}
-            label="Pago"
-            description={paid ? "Entra automaticamente no Financeiro." : status === "concluido" ? "Fica em “A receber” até marcar como pago." : undefined}
-          />
-        </div>
+        {!usingPackage && (
+          <>
+            <Field label="Forma de pagamento">
+              <Select value={payment} onChange={(e) => setPayment(e.target.value as PaymentMethod | "")}>
+                <option value="">Ainda não definida</option>
+                {/* "Pacote" só aparece em atendimentos antigos que já usavam; os novos usam o controle de pacotes */}
+                {(Object.keys(PAYMENT_LABEL) as PaymentMethod[])
+                  .filter((p) => p !== "pacote" || payment === "pacote")
+                  .map((p) => (
+                    <option key={p} value={p}>
+                      {PAYMENT_LABEL[p]}
+                    </option>
+                  ))}
+              </Select>
+            </Field>
+          <div className="rounded-xl bg-muted/60 px-4 py-3">
+            <Switch
+              checked={paid}
+              onChange={(v) => {
+                setPaid(v);
+                // Padrão: hoje se o atendimento ainda vai acontecer (pagou adiantado); senão, o dia do atendimento
+                if (v && !paidAt) setPaidAt(date > today ? today : date);
+              }}
+              label="Pago"
+              description={paid ? "Entra no Financeiro na data do pagamento." : status === "concluido" ? "Fica em “A receber” até marcar como pago." : undefined}
+            />
+            {paid && (
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border/70 pt-3">
+                <label htmlFor="paid-at" className="text-sm font-medium text-foreground/80">Pago em</label>
+                <Input id="paid-at" type="date" value={paidAt} max={today} onChange={(e) => setPaidAt(e.target.value)} className="h-10 w-auto" />
+                {paidAt && paidAt !== date && (
+                  <span className="text-xs text-muted-foreground">
+                    Atendimento em {fmt(`${date}T00:00:00`, "dd/MM/yy")} · o valor entra no Financeiro em {fmt(`${paidAt}T00:00:00`, "dd/MM/yy")}.
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          </>
+        )}
 
         <Field label="Observações">
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex.: prefere música baixa" />

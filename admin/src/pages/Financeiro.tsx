@@ -36,7 +36,7 @@ export default function Financeiro() {
 
   const tx = useLoad(
     // Antes de carregar, lança as despesas fixas que faltam até o mês atual
-    async () => (await supabase.rpc("generate_recurring_expenses"), run(supabase.from("transactions").select("*").gte("date", from).lte("date", to).order("date", { ascending: false }).order("created_at", { ascending: false })) as Promise<Transaction[]>),
+    async () => (await supabase.rpc("generate_recurring_expenses"), run(supabase.from("transactions").select("*, appointments(starts_at)").gte("date", from).lte("date", to).order("date", { ascending: false }).order("created_at", { ascending: false })) as Promise<Transaction[]>),
     [from, to],
   );
   const recurring = useLoad(
@@ -245,6 +245,9 @@ export default function Financeiro() {
                           {t.category}
                           {t.payment_method && ` · ${PAYMENT_LABEL[t.payment_method]}`}
                           {t.appointment_id && <Badge className="bg-primary/10 text-primary">agenda</Badge>}
+                          {t.appointments && t.appointments.starts_at.slice(0, 10) !== t.date && (
+                            <span className="text-muted-foreground">· atendimento em {fmt(t.appointments.starts_at, "dd/MM/yy")}</span>
+                          )}
                           {t.recurring_id && (
                             <Badge className="bg-muted text-muted-foreground">
                               <Repeat className="h-3 w-3" aria-hidden="true" /> fixa

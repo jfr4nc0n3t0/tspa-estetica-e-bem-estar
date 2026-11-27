@@ -242,7 +242,188 @@ create table if not exists public.transactions (
 );
 create index if not exists transactions_date_idx on public.transactions (date);
 
--- Agendamento pago → cria/atualiza a entrada. Desmarcou "pago" ou cancelou → remove.
+-- ---------------------------------------------------------------------
+-- 6a. Pacotes de sessões (ex.: 5 sessões de Head Spa)
+--     A venda entra no Financeiro UMA vez, na data do pagamento. As sessões usadas
+--     depois não geram nova entrada. Concluído e Faltou consomem a sessão;
+--     Agendado/Confirmado reservam; Cancelado devolve.
+-- ---------------------------------------------------------------------
+create table if not exists public.client_packages (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references public.clients (id) on delete cascade,
+  service_id uuid references public.services (id) on delete set null,
+  service_name text not null check (char_length(service_name) between 2 and 120),
+  sessions smallint not null check (sessions between 1 and 100),
+  price numeric(10,2) not null check (price >= 0),
+  paid_at date not null default ((now() at time zone 'America/Sao_Paulo')::date),
+  payment_method text not null check (payment_method in ('pix', 'credito', 'debito', 'dinheiro')),
+  expires_at date,
+  notes text,
+  is_sample boolean not null default false,
+  created_at timestamptz not null default now(),
+  constraint client_packages_expiry check (expires_at is null or expires_at >= paid_at)
+);
+create index if not exists client_packages_client_idx on public.client_packages (client_id);
+
+alter table public.appointments add column if not exists package_id uuid references public.client_packages (id) on delete set null;
+create index if not exists appointments_package_idx on public.appointments (package_id);
+
+-- A venda do pacote vira uma entrada no Financeiro (some se o pacote for excluído)
+alter table public.transactions add column if not exists package_id uuid unique references public.client_packages (id) on delete cascade;
+
+create or replace function public.sync_package_payment()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  client_name text;
+begin
+  select name into client_name from public.clients where id = new.client_id;
+  insert into public.transactions (kind, category, description, amount, date, payment_method, package_id, is_sample)
+  values ('entrada', 'Pacotes',
+          'Pacote ' || new.sessions || '× ' || new.service_name || ' · ' || coalesce(client_name, 'Cliente'),
+          new.price, new.paid_at, new.payment_method, new.id, new.is_sample)
+  on conflict (package_id) do update set
+    description = excluded.description,
+    amount = excluded.amount,
+    date = excluded.date,
+    payment_method = excluded.payment_method;
+  return null;
+end;
+$$;
+
+drop trigger if exists client_packages_payment on public.client_packages;
+create trigger client_packages_payment
+  after insert or update on public.client_packages
+  for each row execute function public.sync_package_payment();
+
+-- Excluiu o pacote: as sessões dele deixam de estar pagas (voltam para "A receber")
+-- em vez de virarem entradas novas no Financeiro.
+create or replace function public.release_package_sessions()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  update public.appointments
+  set package_id = null, paid = false, payment_method = null
+  where package_id = old.id;
+  return old;
+end;
+$$;
+
+drop trigger if exists client_packages_release on public.client_packages;
+create trigger client_packages_release
+  before delete on public.client_packages
+  for each row execute function public.release_package_sessions();
+
+-- Uso de cada pacote (a tela lê daqui)
+drop view if exists public.package_usage;
+create view public.package_usage
+with (security_invoker = true) as
+select
+  p.*,
+  coalesce(u.used, 0)::int as used,
+  coalesce(u.reserved, 0)::int as reserved,
+  greatest(p.sessions - coalesce(u.used, 0) - coalesce(u.reserved, 0), 0)::int as available,
+  (case
+     when coalesce(u.used, 0) >= p.sessions then 'concluido'
+     when p.expires_at is not null and p.expires_at < (now() at time zone 'America/Sao_Paulo')::date then 'vencido'
+     else 'ativo'
+   end) as state,
+  round(p.price / p.sessions, 2)::numeric(10,2) as unit_price
+from public.client_packages p
+left join lateral (
+  select
+    count(*) filter (where a.status in ('concluido', 'faltou')) as used,
+    count(*) filter (where a.status in ('agendado', 'confirmado')) as reserved
+  from public.appointments a
+  where a.package_id = p.id
+) u on true;
+
+-- Atendimento usando pacote: confere dona do pacote, validade e se ainda há sessão
+create or replace function public.check_appointment_package()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  pk public.client_packages;
+  taken int;
+begin
+  if new.package_id is null or new.status = 'cancelado' then
+    return new;
+  end if;
+  -- Só confere quando o vínculo é novo ou o atendimento volta a ocupar sessão
+  if tg_op = 'UPDATE' and new.package_id is not distinct from old.package_id and old.status <> 'cancelado' then
+    return new;
+  end if;
+
+  select * into pk from public.client_packages where id = new.package_id;
+  if pk.client_id <> new.client_id then
+    raise exception 'Esse pacote é de outra cliente.' using errcode = 'P0001';
+  end if;
+  if pk.expires_at is not null and new.starts_at::date > pk.expires_at then
+    raise exception 'O pacote vence em %. Escolha uma data até lá ou não use o pacote.', to_char(pk.expires_at, 'DD/MM/YYYY')
+      using errcode = 'P0001';
+  end if;
+  select count(*) into taken from public.appointments
+  where package_id = new.package_id and status <> 'cancelado' and id <> new.id;
+  if taken >= pk.sessions then
+    raise exception 'O pacote já não tem sessões disponíveis (% de %).', taken, pk.sessions using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists appointments_package on public.appointments;
+create trigger appointments_package
+  before insert or update on public.appointments
+  for each row execute function public.check_appointment_package();
+
+-- Data em que o pagamento foi feito (pode ser antes do atendimento: quem paga adiantado).
+-- A entrada no Financeiro usa essa data; remarcar o atendimento não muda o mês do dinheiro.
+alter table public.appointments add column if not exists paid_at date;
+-- Pagos antigos: mesma data da entrada que já existe (nenhum mês passado muda de valor)
+update public.appointments a
+set paid_at = coalesce((select t.date from public.transactions t where t.appointment_id = a.id), a.starts_at::date)
+where a.paid and a.paid_at is null;
+
+-- Preenche/limpa paid_at antes de salvar:
+--   • não pago → sem data
+--   • pago sem data → hoje, se o atendimento ainda vai acontecer (pagou adiantado);
+--                     a data do atendimento, se já aconteceu (pagou na hora, registrou depois)
+create or replace function public.fill_paid_at()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  today date := (now() at time zone 'America/Sao_Paulo')::date;
+begin
+  -- Sessão de pacote: já paga na venda do pacote
+  if new.package_id is not null then
+    new.paid := true;
+    new.payment_method := 'pacote';
+    select paid_at into new.paid_at from public.client_packages where id = new.package_id;
+    return new;
+  end if;
+  if not new.paid then
+    new.paid_at := null;
+  elsif new.paid_at is null then
+    new.paid_at := least(today, new.starts_at::date);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists appointments_paid_at on public.appointments;
+create trigger appointments_paid_at
+  before insert or update on public.appointments
+  for each row execute function public.fill_paid_at();
+
+-- Agendamento pago → cria/atualiza a entrada (na data do pagamento). Desmarcou "pago" ou cancelou → remove.
 create or replace function public.sync_appointment_payment()
 returns trigger
 language plpgsql
@@ -251,7 +432,7 @@ as $$
 declare
   client_name text;
 begin
-  if new.paid and new.status <> 'cancelado' then
+  if new.paid and new.status <> 'cancelado' and new.package_id is null then
     select name into client_name from public.clients where id = new.client_id;
     insert into public.transactions
       (kind, category, description, amount, date, payment_method, appointment_id, is_sample)
@@ -259,7 +440,7 @@ begin
       ('entrada',
        case when new.payment_method = 'pacote' then 'Pacotes' else 'Atendimentos' end,
        new.service_name || ' · ' || coalesce(client_name, 'Cliente'),
-       new.price, new.starts_at::date, new.payment_method, new.id, new.is_sample)
+       new.price, coalesce(new.paid_at, new.starts_at::date), new.payment_method, new.id, new.is_sample)
     on conflict (appointment_id) do update set
       category = excluded.category,
       description = excluded.description,
@@ -693,6 +874,7 @@ alter table public.appointments enable row level security;
 alter table public.transactions enable row level security;
 alter table public.leads        enable row level security;
 alter table public.recurring_expenses enable row level security;
+alter table public.client_packages enable row level security;
 alter table public.push_subscriptions enable row level security;
 alter table public.push_log   enable row level security;   -- sem política: só a função de envio (service role) acessa
 
@@ -700,7 +882,7 @@ do $$
 declare
   t text;
 begin
-  foreach t in array array['settings', 'services', 'professionals', 'clients', 'appointments', 'transactions', 'recurring_expenses', 'leads', 'push_subscriptions'] loop
+  foreach t in array array['settings', 'services', 'professionals', 'clients', 'appointments', 'transactions', 'recurring_expenses', 'leads', 'push_subscriptions', 'client_packages'] loop
     execute format('drop policy if exists admin_all on public.%I', t);
     execute format(
       'create policy admin_all on public.%I for all to authenticated using (public.is_admin()) with check (public.is_admin())',

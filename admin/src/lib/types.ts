@@ -97,6 +97,8 @@ export type Appointment = {
   status: Status;
   payment_method: PaymentMethod | null;
   paid: boolean;
+  paid_at: string | null; // "2026-11-27": dia em que o pagamento foi feito
+  package_id: string | null; // sessão de um pacote (já pago na venda)
   notes: string | null;
   is_sample: boolean;
   clients?: { name: string; whatsapp: string | null } | null;
@@ -113,6 +115,39 @@ export type Transaction = {
   appointment_id: string | null;
   recurring_id: string | null;
   is_sample: boolean;
+  /** Atendimento ligado (só a data), quando a entrada veio da Agenda */
+  appointments?: { starts_at: string } | null;
+};
+
+/** Pacote de sessões vendido para uma cliente (um serviço por pacote) */
+export type ClientPackage = {
+  id: string;
+  client_id: string;
+  service_id: string | null;
+  service_name: string;
+  sessions: number;
+  price: number;
+  paid_at: string;
+  payment_method: Exclude<PaymentMethod, "pacote">;
+  expires_at: string | null;
+  notes: string | null;
+  is_sample: boolean;
+  created_at: string;
+};
+
+/** Pacote com o uso das sessões (view package_usage) */
+export type PackageUsage = ClientPackage & {
+  used: number; // concluídas + faltas
+  reserved: number; // agendadas/confirmadas
+  available: number;
+  state: "ativo" | "concluido" | "vencido";
+  unit_price: number;
+};
+
+export const PACKAGE_STATE_LABEL: Record<PackageUsage["state"], string> = {
+  ativo: "Ativo",
+  concluido: "Concluído",
+  vencido: "Vencido",
 };
 
 /** Despesa fixa: modelo que o banco lança sozinho todo mês. */

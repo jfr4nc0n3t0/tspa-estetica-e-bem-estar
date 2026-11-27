@@ -19,7 +19,8 @@ function whenLabel(startsAt: string) {
   return `${fmt(startsAt, "EEE, dd/MM")} às ${time}`;
 }
 
-const PAYMENTS = Object.keys(PAYMENT_LABEL) as PaymentMethod[];
+// "Pacote" fica de fora: sessões de pacote já chegam pagas (controle em Clientes → Pacotes)
+const PAYMENTS = (Object.keys(PAYMENT_LABEL) as PaymentMethod[]).filter((p) => p !== "pacote");
 
 /**
  * Atendimentos que já passaram do horário e continuam como agendado/confirmado.

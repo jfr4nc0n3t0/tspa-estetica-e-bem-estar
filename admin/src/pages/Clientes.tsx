@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { subDays } from "date-fns";
-import { AlertTriangle, Cake, CalendarPlus, Check, Gift, MessageCircle, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, Cake, CalendarPlus, Check, Gift, MessageCircle, Package, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { useLocation } from "wouter";
 import { DataList, type DataColumn } from "../components/DataList";
 import { Pagination } from "../components/Pagination";
@@ -14,8 +14,9 @@ import { friendlyError } from "../lib/errors";
 import { brl, brlRound, fmt, nameKey, normalize, phone, phoneKey, plural } from "../lib/format";
 import { useLoad } from "../lib/hooks";
 import { run, supabase } from "../lib/supabase";
-import { PRESSURE_LABEL, STATUS_LABEL, type Appointment, type ClientOverview, type ClientRow, type Pressure } from "../lib/types";
+import { PACKAGE_STATE_LABEL, PAYMENT_LABEL, PRESSURE_LABEL, STATUS_LABEL, type Appointment, type ClientOverview, type ClientRow, type PackageUsage, type Pressure } from "../lib/types";
 import { birthdayMessage, birthdayMonthMessage, clientMessage, waLink } from "../lib/whatsapp";
+import { PackageSheet } from "./PackageSheet";
 
 /** Regras dos filtros (as mesmas da view client_overview no banco) */
 const LOYAL_VISITS = 3;
@@ -437,7 +438,7 @@ function ClientSheet({
   const toast = useToast();
   const confirm = useConfirm();
   const [, navigate] = useLocation();
-  const [tab, setTab] = useState<"dados" | "anamnese" | "historico">("dados");
+  const [tab, setTab] = useState<"dados" | "anamnese" | "pacotes" | "historico">("dados");
   const [form, setForm] = useState({
     name: "",
     whatsapp: "",
@@ -449,6 +450,8 @@ function ClientSheet({
     notes: "",
   });
   const [history, setHistory] = useState<Appointment[] | null>(null);
+  const [packages, setPackages] = useState<PackageUsage[] | null>(null);
+  const [editingPackage, setEditingPackage] = useState<PackageUsage | "new" | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -457,6 +460,7 @@ function ClientSheet({
     setTab("dados");
     setError(null);
     setHistory(null);
+    setPackages(null);
     setForm({
       name: client?.name ?? "",
       whatsapp: client?.whatsapp ?? "",
@@ -471,12 +475,19 @@ function ClientSheet({
       run(supabase.from("appointments").select("*").eq("client_id", client.id).order("starts_at", { ascending: false }))
         .then((rows) => setHistory(rows as Appointment[]))
         .catch((err) => setError(friendlyError(err)));
+      loadPackages(client.id)
+        .catch((err) => setError(friendlyError(err)));
     }
   }, [open, client]);
 
   const duplicate = useClientDuplicate(form.name, form.whatsapp, client?.id ?? null, open);
   // Nome/WhatsApp mudaram? (editar outros campos de uma repetida antiga continua liberado)
   const identityChanged = !client || nameKey(form.name) !== nameKey(client.name) || phoneKey(form.whatsapp) !== phoneKey(client.whatsapp);
+
+  function loadPackages(clientId: string) {
+    return run(supabase.from("package_usage").select("*").eq("client_id", clientId).order("created_at", { ascending: false }))
+      .then((rows) => setPackages(rows as PackageUsage[]));
+  }
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -552,6 +563,7 @@ function ClientSheet({
     : [];
 
   return (
+    <>
     <Sheet
       open={open}
       onClose={onClose}
@@ -568,7 +580,7 @@ function ClientSheet({
           <div className="grid grid-cols-3 gap-2 text-center">
             {stats.map((s) => (
               <div key={s.label} className="rounded-xl bg-muted/70 px-2 py-2.5">
-                <p className={cx("text-lg font-semibold tabular-nums [overflow-wrap:anywhere]", "danger" in s && s.danger && "text-danger")}>{s.value}</p>
+                <p className={cx("whitespace-nowrap text-[0.95rem] font-semibold tabular-nums sm:text-lg", "danger" in s && s.danger && "text-danger")}>{s.value}</p>
                 <p className="text-xs text-muted-foreground">{s.label}</p>
                 {"hint" in s && s.hint && <p className="text-[0.7rem] text-muted-foreground">{s.hint}</p>}
               </div>
@@ -607,7 +619,7 @@ function ClientSheet({
         options={[
           { value: "dados", label: "Dados" },
           { value: "anamnese", label: "Anamnese" },
-          ...(client ? [{ value: "historico" as const, label: "Histórico" }] : []),
+          ...(client ? [{ value: "pacotes" as const, label: "Pacotes" }, { value: "historico" as const, label: "Histórico" }] : []),
         ]}
       />
 
@@ -666,6 +678,24 @@ function ClientSheet({
         </div>
       )}
 
+      {tab === "pacotes" && client && (
+        <div className="space-y-2.5">
+          {packages === null ? (
+            <Spinner />
+          ) : packages.length === 0 ? (
+            <div className="flex flex-col items-center py-6 text-center">
+              <span className="grid h-11 w-11 place-items-center rounded-full bg-muted text-muted-foreground"><Package className="h-5 w-5" /></span>
+              <p className="mt-2 text-sm text-muted-foreground">Nenhum pacote ainda.</p>
+            </div>
+          ) : (
+            packages.map((p) => <PackageCard key={p.id} pkg={p} onOpen={() => setEditingPackage(p)} />)
+          )}
+          <Button size="sm" onClick={() => setEditingPackage("new")} className="mt-1">
+            <Plus className="h-4 w-4" /> Vender pacote
+          </Button>
+        </div>
+      )}
+
       {tab === "historico" && (
         history === null ? (
           <Spinner />
@@ -693,5 +723,58 @@ function ClientSheet({
 
       {error && <p className="mt-4 rounded-xl bg-danger/10 px-3.5 py-3 text-sm text-danger">{error}</p>}
     </Sheet>
+
+      {client && (
+        <PackageSheet
+          open={editingPackage !== null}
+          onClose={() => setEditingPackage(null)}
+          onSaved={() => {
+            loadPackages(client.id).catch((err) => setError(friendlyError(err)));
+            onSaved();
+          }}
+          clientId={client.id}
+          clientName={client.name}
+          pkg={editingPackage === "new" ? null : editingPackage}
+        />
+      )}
+    </>
+  );
+}
+
+/** Pacote na ficha da cliente: sessões usadas, agendadas e disponíveis */
+function PackageCard({ pkg: p, onOpen }: { pkg: PackageUsage; onOpen: () => void }) {
+  const usedPct = Math.min(100, (p.used / p.sessions) * 100);
+  const reservedPct = Math.min(100 - usedPct, (p.reserved / p.sessions) * 100);
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cx("w-full rounded-2xl border border-border/80 px-4 py-3 text-left transition-colors hover:bg-muted/50", p.state !== "ativo" && "opacity-75")}
+    >
+      <span className="flex items-baseline justify-between gap-2">
+        <span className="font-medium">{p.sessions} {p.sessions === 1 ? "sessão" : "sessões"} · {p.service_name}</span>
+        <Badge
+          className={
+            p.state === "ativo" ? "bg-primary/10 text-primary" : p.state === "vencido" ? "bg-ochre/15 text-ochre" : "bg-muted text-muted-foreground"
+          }
+        >
+          {PACKAGE_STATE_LABEL[p.state]}
+        </Badge>
+      </span>
+      <span className="my-2 flex h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+        <span className={p.state === "ativo" ? "bg-primary" : "bg-muted-foreground"} style={{ width: `${usedPct}%` }} />
+        <span className="bg-primary/40" style={{ width: `${reservedPct}%` }} />
+      </span>
+      <span className="block text-sm text-muted-foreground">
+        {plural(p.used, "usada", "usadas")}
+        {p.reserved > 0 && ` · ${plural(p.reserved, "agendada", "agendadas")}`}
+        {" · "}
+        <strong className="font-medium text-foreground">{plural(p.available, "disponível", "disponíveis")}</strong>
+      </span>
+      <span className="mt-1 block text-xs text-muted-foreground">
+        {brl(p.price)} · pago em {fmt(`${p.paid_at}T00:00:00`, "dd/MM/yy")} ({PAYMENT_LABEL[p.payment_method]})
+        {p.expires_at ? ` · vale até ${fmt(`${p.expires_at}T00:00:00`, "dd/MM/yy")}` : " · sem validade"}
+      </span>
+    </button>
   );
 }
