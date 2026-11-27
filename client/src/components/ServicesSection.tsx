@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   facialServices,
   feetRitual,
+  firstVisitPhoto,
   headSpaServices,
   massageServices,
   type Session,
@@ -149,14 +150,15 @@ function FirstVisitInvite() {
   return (
     <a
       href={agendarUrl(essencial.name)}
+      id="convite-primeira-visita"
       className="group mx-auto flex max-w-3xl flex-col items-center gap-4 rounded-[1.5rem] border border-border bg-card px-6 py-5 text-center transition hover:border-primary/40 sm:flex-row sm:text-left"
       data-testid="link-primeira-visita"
     >
       <img
-        src={essencial.images[0]}
+        src={firstVisitPhoto}
         alt=""
         loading="lazy"
-        className="h-20 w-20 shrink-0 rounded-full object-cover"
+        className="h-20 w-20 shrink-0 rounded-2xl object-cover"
       />
       <span className="flex-1">
         <span className="block text-[0.7rem] font-medium uppercase tracking-[0.22em] text-taupe">Primeira vez no TSpa?</span>

@@ -24,6 +24,9 @@ function pick(...items: [serviceId: string, fileName: string][]): string[] {
   });
 }
 
+/** Foto do convite de primeira visita (Head Spa): rosto relaxado no centro, funciona pequena */
+export const firstVisitPhoto = pick(["head-spa-imersao", "01-mascara-jade-arco-de-agua"])[0];
+
 export type Session = {
   id: string;
   name: string;
