@@ -88,5 +88,15 @@ export async function disablePush() {
 /** Pede para a função mandar uma notificação de teste para os aparelhos ativados. */
 export async function sendTestPush() {
   const { error } = await supabase.functions.invoke("push-agenda", { body: { action: "test" } });
-  if (error) throw new Error("Não consegui enviar o teste. Confira se a função push-agenda foi publicada no Supabase.");
+  if (!error) return;
+  // Mostra o motivo que a função devolveu (ex.: segredo faltando, login não reconhecido)
+  const response = (error as { context?: Response }).context;
+  let reason = "";
+  if (response && typeof response.json === "function") {
+    reason = await response.json().then((b: { error?: string }) => b?.error ?? "", () => "");
+    if (!reason) reason = `a função respondeu ${response.status}`;
+  } else {
+    reason = "a função push-agenda não respondeu. Confira se ela foi publicada no Supabase";
+  }
+  throw new Error(`Não consegui enviar o teste: ${reason}`);
 }

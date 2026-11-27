@@ -6,7 +6,7 @@ import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 export type Subscription = { id: string; endpoint: string; p256dh: string; auth: string };
 export type Payload = { title: string; body: string; url: string; tag: string };
 /** Envia para um aparelho. `gone` = o aparelho não existe mais (desinstalou / desativou): apagar. */
-export type SendFn = (sub: Subscription, payload: Payload) => Promise<{ ok: boolean; gone: boolean }>;
+export type SendFn = (sub: Subscription, payload: Payload) => Promise<{ ok: boolean; gone: boolean; error?: string }>;
 
 type Appt = {
   id: string;
@@ -71,10 +71,11 @@ async function claim(db: SupabaseClient, kind: "resumo" | "lembrete", ref: strin
   return (data ?? []).length > 0;
 }
 
-async function broadcast(db: SupabaseClient, subs: Subscription[], send: SendFn, payload: Payload) {
+async function broadcast(db: SupabaseClient, subs: Subscription[], send: SendFn, payload: Payload, failures?: string[]) {
   let delivered = 0;
   for (const sub of subs) {
     const result = await send(sub, payload);
+    if (!result.ok && result.error) failures?.push(result.error);
     if (result.gone) await db.from("push_subscriptions").delete().eq("id", sub.id);
     else if (result.ok) {
       delivered++;
@@ -84,7 +85,7 @@ async function broadcast(db: SupabaseClient, subs: Subscription[], send: SendFn,
   return delivered;
 }
 
-export type RunResult = { subscriptions: number; daily: number; reminders: number; test: boolean };
+export type RunResult = { subscriptions: number; daily: number; reminders: number; test: boolean; delivered: number; failures: string[] };
 
 /**
  * Roda a cada poucos minutos: manda o resumo do dia (uma vez, no horário dos ajustes)
@@ -92,7 +93,7 @@ export type RunResult = { subscriptions: number; daily: number; reminders: numbe
  */
 export async function runNotifications(db: SupabaseClient, send: SendFn, opts: { now?: Date; test?: boolean } = {}): Promise<RunResult> {
   const now = spaNow(opts.now ?? new Date());
-  const result: RunResult = { subscriptions: 0, daily: 0, reminders: 0, test: Boolean(opts.test) };
+  const result: RunResult = { subscriptions: 0, daily: 0, reminders: 0, test: Boolean(opts.test), delivered: 0, failures: [] };
 
   const { data: subs, error: subsError } = await db.from("push_subscriptions").select("id, endpoint, p256dh, auth");
   if (subsError) throw subsError;
@@ -100,12 +101,12 @@ export async function runNotifications(db: SupabaseClient, send: SendFn, opts: {
   if (!subs?.length) return result;
 
   if (opts.test) {
-    await broadcast(db, subs, send, {
+    result.delivered = await broadcast(db, subs, send, {
       title: "Notificações ativadas",
       body: "Você vai receber o resumo do dia e um lembrete antes de cada atendimento.",
       url: "/mais",
       tag: "teste",
-    });
+    }, result.failures);
     return result;
   }
 
