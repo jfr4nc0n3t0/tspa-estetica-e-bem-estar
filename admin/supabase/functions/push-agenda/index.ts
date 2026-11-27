@@ -4,7 +4,7 @@
 //     (só a dona logada consegue).
 // Segredos necessários (Supabase → Edge Functions → Secrets): veja admin/NOTIFICACOES.md.
 
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 import { runNotifications, type SendFn } from "./core.ts";
 
@@ -27,15 +27,38 @@ function sameSecret(a: string, b: string) {
   return diff === 0;
 }
 
-/** A chamada vem da dona logada no painel? (confere o login e a lista admin_users com a chave de serviço) */
-async function isAdmin(db: SupabaseClient, authorization: string | null) {
-  const token = authorization?.replace(/^Bearer\s+/i, "").trim();
-  if (!token) return false;
-  const { data, error } = await db.auth.getUser(token);
-  const email = data?.user?.email?.toLowerCase();
-  if (error || !email) return false;
-  const { data: admins } = await db.from("admin_users").select("email");
-  return (admins ?? []).some((a: { email: string }) => a.email.toLowerCase() === email);
+/**
+ * Chave de serviço do projeto. Projetos com as chaves novas recebem SUPABASE_SECRET_KEYS
+ * (JSON {"default": "sb_secret_..."}); os antigos, SUPABASE_SERVICE_ROLE_KEY.
+ */
+function serviceKey() {
+  try {
+    const keys = JSON.parse(env("SUPABASE_SECRET_KEYS") || "{}") as Record<string, string>;
+    const key = keys.default ?? Object.values(keys)[0];
+    if (key) return key;
+  } catch {
+    /* formato inesperado: usa a antiga */
+  }
+  return env("SUPABASE_SERVICE_ROLE_KEY");
+}
+
+/**
+ * A chamada vem da dona logada no painel? Usa as mesmas credenciais que o painel
+ * (chave pública que veio na chamada + login) e pergunta ao banco com is_admin().
+ * Retorna null se for a dona, ou o motivo de não ser.
+ */
+async function adminCheck(req: Request): Promise<string | null> {
+  const authorization = req.headers.get("Authorization") ?? "";
+  if (!/^Bearer\s+\S+/i.test(authorization)) return "a chamada veio sem login";
+  const apikey = req.headers.get("apikey") || env("SUPABASE_ANON_KEY");
+  if (!apikey) return "a chamada veio sem a chave pública";
+  const userClient = createClient(env("SUPABASE_URL"), apikey, {
+    global: { headers: { Authorization: authorization } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data, error } = await userClient.rpc("is_admin");
+  if (error) return `is_admin: ${error.message}`;
+  return data === true ? null : "este e-mail não está em admin_users";
 }
 
 Deno.serve(async (req) => {
@@ -46,17 +69,16 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   const test = body?.action === "test";
 
-  if (!env("SUPABASE_URL") || !env("SUPABASE_SERVICE_ROLE_KEY")) {
-    return json({ error: "A função não recebeu SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY do Supabase." }, 500);
-  }
-  const db = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
-
   if (!fromCron) {
     if (!test) return json({ error: "Não autorizado" }, 401);
-    if (!(await isAdmin(db, req.headers.get("Authorization")))) {
-      return json({ error: "Seu login não foi reconhecido como dona do painel. Saia e entre de novo." }, 401);
-    }
+    const notAdmin = await adminCheck(req);
+    if (notAdmin) return json({ error: `Seu login não foi reconhecido como dona do painel (${notAdmin}).` }, 401);
   }
+
+  if (!env("SUPABASE_URL") || !serviceKey()) {
+    return json({ error: "A função não recebeu a URL ou a chave de serviço do Supabase." }, 500);
+  }
+  const db = createClient(env("SUPABASE_URL"), serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } });
 
   const missing = ["VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY"].filter((k) => !env(k));
   if (missing.length) {
