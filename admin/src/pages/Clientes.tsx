@@ -5,14 +5,14 @@ import { useLocation } from "wouter";
 import { Sheet } from "../components/Sheet";
 import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
-import { Badge, Button, Card, Empty, ErrorBox, Field, Input, PageHeader, Segmented, Select, Spinner, Stat, Switch, Textarea, cx } from "../components/ui";
+import { Badge, Button, Card, Empty, ErrorBox, Field, Input, PageHeader, Segmented, Select, Spinner, Switch, Textarea, cx } from "../components/ui";
 import { useClientDuplicate } from "../lib/clientDuplicate";
 import { friendlyError } from "../lib/errors";
 import { brl, brlRound, fmt, nameKey, normalize, phone, phoneKey, plural } from "../lib/format";
 import { useLoad } from "../lib/hooks";
 import { run, supabase } from "../lib/supabase";
 import { PRESSURE_LABEL, STATUS_LABEL, type Appointment, type ClientOverview, type ClientRow, type Pressure } from "../lib/types";
-import { birthdayMessage, clientMessage, waLink } from "../lib/whatsapp";
+import { birthdayMessage, birthdayMonthMessage, clientMessage, waLink } from "../lib/whatsapp";
 
 /** Regras dos filtros (as mesmas da view client_overview no banco) */
 const LOYAL_VISITS = 3;
@@ -20,7 +20,7 @@ const LAPSED_DAYS = 60;
 const NEW_DAYS = 30;
 const PAGE_SIZE = 30;
 
-type Filter = "todas" | "recorrentes" | "sumidas" | "novas" | "nunca" | "aniversario" | "repetidas";
+type Filter = "todas" | "recorrentes" | "sumidas" | "novas" | "nunca" | "repetidas";
 type Sort = "nome" | "recentes" | "visitas" | "valor" | "sumidas";
 
 const SORT_LABEL: Record<Sort, string> = {
@@ -72,7 +72,6 @@ function listQuery(filter: Filter, sort: Sort, search: string) {
     case "sumidas": q = q.gt("days_since_last", LAPSED_DAYS).is("next_visit", null); break;
     case "novas": q = q.gte("created_at", subDays(new Date(), NEW_DAYS).toISOString()); break;
     case "nunca": q = q.eq("visits", 0); break;
-    case "aniversario": q = q.eq("birthday_month", new Date().getMonth() + 1); break;
     case "repetidas": q = q.eq("has_duplicate", true); break;
   }
 
@@ -176,14 +175,17 @@ export default function Clientes() {
   }
 
   const ov = overview.data;
-  const todayBirthdays = (birthdays.data ?? []).filter((c) => birthdayToday(c.birthday));
+  // Aniversário hoje: fica fixa no topo da lista (sem busca e sem filtro)
+  const pinned = filter === "todas" && !debounced ? (birthdays.data ?? []).filter((c) => birthdayToday(c.birthday)) : [];
+  const pinnedIds = new Set(pinned.map((c) => c.id));
+  const visibleRows = rows ? [...pinned, ...rows.filter((c) => !pinnedIds.has(c.id))] : null;
+
   const chips: { value: Filter; label: string; count?: number; tone?: "danger" }[] = [
     { value: "todas", label: "Todas", count: ov?.total },
-    { value: "recorrentes", label: `Recorrentes`, count: ov?.loyal },
+    { value: "recorrentes", label: "Recorrentes", count: ov?.loyal },
     { value: "sumidas", label: "Sumidas", count: ov?.lapsed },
     { value: "novas", label: "Novas", count: ov?.recent },
     { value: "nunca", label: "Nunca vieram", count: ov?.never },
-    { value: "aniversario", label: "Aniversariantes do mês", count: ov?.birthdays },
     ...(ov?.duplicates || filter === "repetidas" ? [{ value: "repetidas" as const, label: "Repetidas", count: ov?.duplicates, tone: "danger" as const }] : []),
   ];
 
@@ -195,26 +197,21 @@ export default function Clientes() {
     repetidas: "Mesmo WhatsApp ou mesmo nome. Abra cada uma, confira e exclua a que sobrou (os agendamentos dela são excluídos juntos).",
   };
 
+  const subtitle = ov
+    ? [plural(ov.total, "cadastrada", "cadastradas"), ov.total ? `${ov.active} ativas` : "", ov.lapsed ? `${ov.lapsed} sumidas` : ""].filter(Boolean).join(" · ")
+    : undefined;
+
   return (
     <>
       <PageHeader
         title="Clientes"
-        subtitle={ov ? `${plural(ov.total, "cadastrada", "cadastradas")}${ov.new_this_month ? ` · ${ov.new_this_month} nova(s) este mês` : ""}` : undefined}
+        subtitle={subtitle}
         action={
           <Button onClick={() => setSelected("new")} aria-label="Nova cliente">
             <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Nova cliente</span>
           </Button>
         }
       />
-
-      {ov && ov.total > 0 && (
-        <div className="mb-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <Stat label="Ativas" value={ov.active} hint={`vieram em ${LAPSED_DAYS} dias ou têm horário`} />
-          <Stat label="Sumidas" value={ov.lapsed} hint={`${LAPSED_DAYS}+ dias sem vir`} tone={ov.lapsed > 0 ? "negative" : undefined} />
-          <Stat label="Ticket médio" value={brl(ov.avg_ticket)} hint="por visita concluída" />
-          <Stat label="Receita total" value={brlRound(ov.revenue)} hint={ov.to_receive > 0 ? `${brl(ov.to_receive)} a receber` : "atendimentos concluídos"} />
-        </div>
-      )}
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
@@ -226,62 +223,36 @@ export default function Clientes() {
         </Select>
       </div>
 
-      <div className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0" role="radiogroup" aria-label="Filtrar clientes">
-        {chips.map((chip) => (
-          <button
-            key={chip.value}
-            type="button"
-            role="radio"
-            aria-checked={filter === chip.value}
-            onClick={() => setFilter(chip.value)}
-            className={cx(
-              "flex h-9 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors",
-              filter === chip.value
-                ? chip.tone === "danger" ? "bg-danger text-danger-foreground" : "bg-primary text-primary-foreground"
-                : chip.tone === "danger" ? "bg-danger/10 text-danger hover:bg-danger/15" : "bg-muted text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {chip.label}
-            {chip.count !== undefined && <span className="tabular-nums opacity-70">{chip.count}</span>}
-          </button>
-        ))}
+      <div className="no-scrollbar -mx-4 mt-3 flex gap-1 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0" role="radiogroup" aria-label="Filtrar clientes">
+        {chips.map((chip) => {
+          const active = filter === chip.value;
+          return (
+            <button
+              key={chip.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setFilter(chip.value)}
+              className={cx(
+                "flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[0.8rem] transition-colors",
+                active ? "border-border bg-card font-medium shadow-sm" : "border-transparent hover:bg-muted/60",
+                chip.tone === "danger" ? "text-danger" : active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {chip.label}
+              {chip.count !== undefined && <span className="tabular-nums opacity-60">{chip.count}</span>}
+            </button>
+          );
+        })}
       </div>
       {FILTER_HINT[filter] && <p className="mt-2 text-sm text-muted-foreground">{FILTER_HINT[filter]}</p>}
-
-      {todayBirthdays.length > 0 && filter === "todas" && !search && (
-        <Card className="mt-4 border-primary/30 bg-primary/[0.06]">
-          <p className="flex items-center gap-2 px-4 pt-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-            <Cake className="h-4 w-4" /> Aniversário hoje
-          </p>
-          <ul className="divide-y divide-primary/15">
-            {todayBirthdays.map((c) => (
-              <li key={c.id} className="flex items-center gap-3 px-4 py-3">
-                <button type="button" onClick={() => setSelected(c)} className="min-w-0 flex-1 text-left">
-                  <span className="block truncate font-medium">{c.name}</span>
-                  <span className="block text-sm text-muted-foreground">{c.whatsapp ? phone(c.whatsapp) : "Sem WhatsApp cadastrado"}</span>
-                </button>
-                {c.whatsapp && (
-                  <a
-                    href={waLink(c.whatsapp, birthdayMessage(c.name))}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                  >
-                    <Gift className="h-4 w-4" /> Parabenizar
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
 
       <div className="mt-4">
         {error ? (
           <ErrorBox message={error} onRetry={reloadAll} />
         ) : loading && !rows ? (
           <Spinner />
-        ) : !rows || rows.length === 0 ? (
+        ) : !visibleRows || visibleRows.length === 0 ? (
           <Empty title={search ? "Ninguém encontrado" : filter !== "todas" ? "Ninguém neste filtro" : "Nenhuma cliente ainda"}>
             {search
               ? "Confira a grafia ou busque pelo WhatsApp."
@@ -292,27 +263,27 @@ export default function Clientes() {
         ) : (
           <>
             <Card className={cx("overflow-hidden transition-opacity", loading && "opacity-60")}>
-              <div className="hidden grid-cols-[2.5rem_minmax(0,1fr)_4.5rem_8rem_6.5rem_7rem] gap-3 border-b border-border/70 px-4 py-2.5 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground md:grid" aria-hidden="true">
-                <span />
-                <span>Cliente</span>
-                <span className="text-right">Visitas</span>
-                <span>Última visita</span>
-                <span className="text-right">Ticket médio</span>
-                <span className="text-right">Total gasto</span>
+              <div className="hidden items-center border-b border-border/70 pr-3 md:flex" aria-hidden="true">
+                <div className={cx("grid flex-1 gap-3 py-2.5 pl-4 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground", ROW_COLS_MD)}>
+                  <span />
+                  <span>Cliente</span>
+                  <span>Visitas</span>
+                  <span>Última visita</span>
+                  <span>Total gasto</span>
+                </div>
+                <span className="w-9" />
               </div>
               <ul className="divide-y divide-border/70">
-                {rows.map((c) => (
-                  <li key={c.id}>
-                    <ClientListItem client={c} onOpen={() => setSelected(c)} />
-                  </li>
+                {visibleRows.map((c) => (
+                  <ClientListItem key={c.id} client={c} highlight={pinnedIds.has(c.id)} onOpen={() => setSelected(c)} />
                 ))}
               </ul>
             </Card>
 
             <div className="mt-3 flex flex-col items-center gap-2 text-sm text-muted-foreground">
-              <p>Mostrando {rows.length} de {total}</p>
-              {rows.length < total && (
-                <Button variant="secondary" onClick={() => fetchRows(rows.length, rows.length + PAGE_SIZE - 1, true)} loading={loadingMore}>
+              <p>Mostrando {rows!.length} de {total}</p>
+              {rows!.length < total && (
+                <Button variant="secondary" onClick={() => fetchRows(rows!.length, rows!.length + PAGE_SIZE - 1, true)} loading={loadingMore}>
                   Carregar mais
                 </Button>
               )}
@@ -332,65 +303,80 @@ export default function Clientes() {
   );
 }
 
-function ClientListItem({ client: c, onOpen }: { client: ClientRow; onOpen: () => void }) {
+/** Colunas da lista no computador: avatar · cliente · visitas · última visita · total gasto */
+const ROW_COLS_MD = "md:grid-cols-[2.5rem_minmax(0,1fr)_5rem_8rem_7rem]";
+
+function ClientListItem({ client: c, highlight, onOpen }: { client: ClientRow; highlight: boolean; onOpen: () => void }) {
   const lapsed = isLapsed(c);
+  const today = birthdayToday(c.birthday);
+  const month = !today && birthdayThisMonth(c.birthday);
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="grid w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 md:grid-cols-[2.5rem_minmax(0,1fr)_4.5rem_8rem_6.5rem_7rem]"
-    >
-      <span className="grid h-10 w-10 place-items-center rounded-full bg-nude font-serif text-lg text-taupe dark:bg-muted dark:text-foreground" aria-hidden="true">
-        {c.name.charAt(0).toUpperCase()}
-      </span>
+    <li className={cx("flex items-center pr-3 transition-colors hover:bg-muted/50", highlight && "bg-primary/[0.06]")}>
+      <button
+        type="button"
+        onClick={onOpen}
+        className={cx("grid min-w-0 flex-1 grid-cols-[2.5rem_minmax(0,1fr)_4.5rem] items-center gap-3 py-3 pl-4 text-left", ROW_COLS_MD)}
+      >
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-nude font-serif text-lg text-taupe dark:bg-muted dark:text-foreground" aria-hidden="true">
+          {c.name.charAt(0).toUpperCase()}
+        </span>
 
-      <div className="min-w-0">
-        <p className="flex min-w-0 items-center gap-1.5 font-medium">
-          <span className="truncate">{c.name}</span>
-          {birthdayToday(c.birthday) ? (
-            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground" aria-label="Aniversário hoje" title="Aniversário hoje">
-              <Cake className="h-3 w-3" />
-            </span>
-          ) : (
-            birthdayThisMonth(c.birthday) && <Cake className="h-3.5 w-3.5 shrink-0 text-primary" aria-label="Aniversário este mês" />
-          )}
-        </p>
-        {/* Celular: resumo numa linha */}
-        <p className="truncate text-sm text-muted-foreground md:hidden">
-          {c.visits ? `${plural(c.visits, "visita", "visitas")} · última ${daysAgo(c.days_since_last)}` : "Sem visitas concluídas"}
-        </p>
-        {/* Computador: WhatsApp */}
-        <p className="hidden truncate text-sm text-muted-foreground md:block">{c.whatsapp ? phone(c.whatsapp) : "Sem WhatsApp"}</p>
-        <div className="mt-1 flex flex-wrap gap-1 empty:hidden">
-          {c.next_visit && <Badge className="bg-primary/10 text-primary">Próxima {fmt(c.next_visit, "dd/MM")}</Badge>}
-          {lapsed && <Badge className="bg-ochre/15 text-ochre">Sumida</Badge>}
-          {!c.visits && !c.next_visit && isNew(c) && <Badge className="bg-dusk/15 text-dusk">Nova</Badge>}
-          {c.no_shows > 0 && <Badge>{plural(c.no_shows, "falta", "faltas")}</Badge>}
-          {c.has_duplicate && <Badge className="bg-danger/10 text-danger">Repetida</Badge>}
+        <div className="min-w-0">
+          <p className="truncate font-medium">{c.name}</p>
+          {/* Celular: resumo numa linha */}
+          <p className="truncate text-sm text-muted-foreground md:hidden">
+            {c.visits ? `${plural(c.visits, "visita", "visitas")} · última ${daysAgo(c.days_since_last)}` : "Sem visitas concluídas"}
+          </p>
+          {/* Computador: WhatsApp */}
+          <p className="hidden truncate text-sm text-muted-foreground md:block">{c.whatsapp ? phone(c.whatsapp) : "Sem WhatsApp"}</p>
+          <div className="mt-1 flex flex-wrap gap-1 empty:hidden">
+            {today && <Badge className="bg-primary text-primary-foreground"><Cake className="h-3 w-3" /> Aniversário hoje</Badge>}
+            {month && <Badge className="bg-primary/10 text-primary"><Cake className="h-3 w-3" /> Aniversário {fmt(c.birthday!, "dd/MM")}</Badge>}
+            {c.next_visit && <Badge className="bg-primary/10 text-primary">Próxima {fmt(c.next_visit, "dd/MM")}</Badge>}
+            {lapsed && <Badge className="bg-ochre/15 text-ochre">Sumida</Badge>}
+            {!c.visits && !c.next_visit && isNew(c) && <Badge className="bg-dusk/15 text-dusk">Nova</Badge>}
+            {c.no_shows > 0 && <Badge>{plural(c.no_shows, "falta", "faltas")}</Badge>}
+            {c.has_duplicate && <Badge className="bg-danger/10 text-danger">Repetida</Badge>}
+          </div>
         </div>
-      </div>
 
-      {/* Celular: valor à direita */}
-      <div className="text-right md:hidden">
-        <p className="font-medium tabular-nums">{brlRound(c.total_spent)}</p>
-        {c.visits > 0 && <p className="text-xs text-muted-foreground tabular-nums">ticket {brlRound(c.avg_ticket)}</p>}
-      </div>
+        {/* Celular: valor */}
+        <p className="font-medium tabular-nums md:hidden">{brlRound(c.total_spent)}</p>
 
-      {/* Computador: colunas */}
-      <span className="hidden text-right tabular-nums md:block">{c.visits}</span>
-      <span className="hidden md:block">
-        {c.last_visit ? (
-          <>
-            <span className="block tabular-nums">{fmt(c.last_visit, "dd/MM/yy")}</span>
-            <span className={cx("block text-xs", lapsed ? "text-ochre" : "text-muted-foreground")}>{daysAgo(c.days_since_last)}</span>
-          </>
-        ) : (
-          <span className="text-muted-foreground">—</span>
+        {/* Computador: colunas */}
+        <span className="hidden tabular-nums md:block">{c.visits}</span>
+        <span className="hidden md:block">
+          {c.last_visit ? (
+            <>
+              <span className="block tabular-nums">{fmt(c.last_visit, "dd/MM/yy")}</span>
+              <span className={cx("block text-xs", lapsed ? "text-ochre" : "text-muted-foreground")}>{daysAgo(c.days_since_last)}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </span>
+        <span className="hidden font-medium tabular-nums md:block">{brl(c.total_spent)}</span>
+      </button>
+
+      {/* Aniversário no mês: atalho para mandar mensagem */}
+      <span className="flex w-9 shrink-0 justify-center">
+        {(today || month) && c.whatsapp && (
+          <a
+            href={waLink(c.whatsapp, today ? birthdayMessage(c.name) : birthdayMonthMessage(c.name, c.birthday!))}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Enviar mensagem de aniversário para ${c.name}`}
+            title="Enviar mensagem de aniversário"
+            className={cx(
+              "grid h-9 w-9 place-items-center rounded-full",
+              today ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-primary hover:bg-primary/10",
+            )}
+          >
+            <Gift className="h-4 w-4" />
+          </a>
         )}
       </span>
-      <span className="hidden text-right tabular-nums md:block">{c.visits ? brl(c.avg_ticket) : "—"}</span>
-      <span className="hidden text-right font-medium tabular-nums md:block">{brl(c.total_spent)}</span>
-    </button>
+    </li>
   );
 }
 
