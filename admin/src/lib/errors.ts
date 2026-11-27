@@ -9,6 +9,8 @@ export function friendlyError(err: unknown): string {
     return "Esse horário entra em conflito com outro atendimento.";
   }
   if (e.code === "P0001") return msg;
+  if (e.code === "23505" && msg.includes("clients_phone_unique")) return "Já existe uma cliente com esse WhatsApp.";
+  if (e.code === "23505" && msg.includes("clients_name_unique")) return "Já existe uma cliente com esse nome. Se for outra pessoa, inclua o sobrenome.";
   if (e.code === "23503") return "Este registro está ligado a outros dados e não pode ser removido.";
   if (msg.includes("professional_required")) return "Escolha a profissional deste atendimento.";
   if (e.code === "23514") return "Algum campo está com valor inválido. Confira e tente de novo.";

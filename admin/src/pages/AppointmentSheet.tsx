@@ -7,7 +7,7 @@ import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
 import { useAppData } from "../lib/appData";
 import { friendlyError } from "../lib/errors";
-import { brl, durationBetween, fmt, normalize, phone, toDateInput } from "../lib/format";
+import { brl, durationBetween, fmt, nameKey, normalize, phone, phoneKey, toDateInput } from "../lib/format";
 import { buildRange, findConflict, slotTimes } from "../lib/slots";
 import { run, supabase } from "../lib/supabase";
 import {
@@ -25,12 +25,6 @@ import { confirmationMessage, waLink } from "../lib/whatsapp";
 export type AppointmentDefaults = { date?: string; time?: string; room?: 1 | 2; clientId?: string; leadId?: string };
 
 type LeadInfo = { id: string; name: string; whatsapp: string; interest: string | null; client_id: string | null };
-
-/** Telefone comparável: só dígitos, sem o 55 do Brasil */
-const phoneKey = (phone: string | null | undefined) => {
-  const d = (phone ?? "").replace(/\D/g, "");
-  return d.length >= 12 && d.startsWith("55") ? d.slice(2) : d;
-};
 
 type ClientOption = Pick<Client, "id" | "name" | "whatsapp" | "allergies" | "pregnant" | "massage_pressure" | "preferences">;
 
@@ -165,6 +159,16 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
     return clients.filter((c) => normalize(c.name).includes(q) || (c.whatsapp ?? "").includes(q)).slice(0, 6);
   }, [clients, clientQuery]);
 
+  /** Nova cliente com o mesmo WhatsApp ou nome de uma já cadastrada */
+  const newClientMatch = useMemo(() => {
+    if (clientMode !== "new") return null;
+    const pk = phoneKey(newWhatsapp);
+    const nk = nameKey(newName);
+    const byPhone = pk.length >= 10 ? clients.find((c) => c.whatsapp && phoneKey(c.whatsapp) === pk) : undefined;
+    const byName = nk.length >= 2 ? clients.find((c) => nameKey(c.name) === nk) : undefined;
+    return byPhone ? { client: byPhone, by: "whatsapp" as const } : byName ? { client: byName, by: "nome" as const } : null;
+  }, [clientMode, clients, newName, newWhatsapp]);
+
   /** Troca a lista de serviços e soma duração e valor. */
   function applyServices(ids: string[]) {
     setServiceIds(ids);
@@ -179,6 +183,9 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
     const priceValue = Number(price.replace(",", "."));
     if (clientMode === "existing" && !clientId) return setError("Escolha a cliente ou cadastre uma nova.");
     if (clientMode === "new" && newName.trim().length < 2) return setError("Digite o nome da nova cliente.");
+    if (newClientMatch) {
+      return setError(`${newClientMatch.client.name} já está cadastrada com esse ${newClientMatch.by === "whatsapp" ? "WhatsApp" : "nome"}. Use a cliente existente.`);
+    }
     if (selectedServices.length === 0 && !keepsOldServices) return setError("Escolha pelo menos um serviço.");
     if (needsProfessional && !professionalId) {
       return setError(professionals.some((p) => p.active) ? "Escolha a profissional." : "Cadastre uma profissional em Mais → Profissionais.");
@@ -338,6 +345,19 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
             <div className="grid gap-3 sm:grid-cols-2">
               <Input placeholder="Nome" value={newName} onChange={(e) => setNewName(e.target.value)} />
               <Input placeholder="WhatsApp com DDD" inputMode="tel" value={newWhatsapp} onChange={(e) => setNewWhatsapp(e.target.value)} />
+              {newClientMatch && (
+                <p className="rounded-xl bg-ochre/10 px-3.5 py-2.5 text-sm sm:col-span-2" role="status">
+                  {newClientMatch.by === "whatsapp" ? "Esse WhatsApp já é de " : "Já existe uma cliente chamada "}
+                  <strong>{newClientMatch.client.name}</strong>.{" "}
+                  <button
+                    type="button"
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                    onClick={() => { setClientMode("existing"); setClientId(newClientMatch.client.id); }}
+                  >
+                    Usar esta cliente
+                  </button>
+                </p>
+              )}
             </div>
           ) : selectedClient ? (
             <div className="flex items-center justify-between rounded-xl border border-input bg-card px-3.5 py-2.5">

@@ -495,6 +495,162 @@ left join public.appointments a on a.client_id = c.id
 group by c.id;
 
 -- ---------------------------------------------------------------------
+-- 8b. Clientes sem cadastro repetido
+--     Bloqueia uma cliente nova (ou edição) com o mesmo WhatsApp ou o mesmo
+--     nome de outra. O nome é comparado sem acentos, maiúsculas e espaços extras
+--     ("Ana  Lúcia" = "ana lucia"); o WhatsApp, sem o 55 do Brasil.
+-- ---------------------------------------------------------------------
+create or replace function public.name_key(name text)
+returns text
+language sql
+immutable
+as $$
+  select btrim(regexp_replace(
+    translate(lower(coalesce(name, '')), 'áàâãäåéèêëíìîïóòôõöúùûüçñý', 'aaaaaaeeeeiiiiooooouuuucny'),
+    '\s+', ' ', 'g'));
+$$;
+
+create index if not exists clients_name_key_idx on public.clients (public.name_key(name));
+create index if not exists clients_phone_key_idx on public.clients (public.phone_key(whatsapp));
+
+create or replace function public.check_client_duplicate()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_other text;
+begin
+  new.name := btrim(regexp_replace(new.name, '\s+', ' ', 'g'));
+  new.whatsapp := nullif(regexp_replace(coalesce(new.whatsapp, ''), '\D', '', 'g'), '');
+
+  if new.whatsapp is not null
+     and (tg_op = 'INSERT' or public.phone_key(new.whatsapp) is distinct from public.phone_key(old.whatsapp)) then
+    select name into v_other
+    from public.clients
+    where public.phone_key(whatsapp) = public.phone_key(new.whatsapp) and id <> new.id
+    limit 1;
+    if found then
+      raise exception 'Já existe uma cliente com esse WhatsApp: %.', v_other using errcode = 'P0001';
+    end if;
+  end if;
+
+  if tg_op = 'INSERT' or public.name_key(new.name) <> public.name_key(old.name) then
+    select name into v_other
+    from public.clients
+    where public.name_key(name) = public.name_key(new.name) and id <> new.id
+    limit 1;
+    if found then
+      raise exception 'Já existe uma cliente chamada %. Se for outra pessoa, inclua o sobrenome.', v_other
+        using errcode = 'P0001';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists clients_no_duplicate on public.clients;
+create trigger clients_no_duplicate
+  before insert or update on public.clients
+  for each row execute function public.check_client_duplicate();
+
+-- Trava definitiva no banco. Só é criada quando não há repetidas antigas;
+-- se houver, o painel mostra o filtro "Repetidas" para você resolver e rodar o script de novo.
+do $$
+begin
+  if not exists (
+    select 1 from public.clients where whatsapp is not null
+    group by public.phone_key(whatsapp) having count(*) > 1
+  ) then
+    create unique index if not exists clients_phone_unique
+      on public.clients (public.phone_key(whatsapp)) where whatsapp is not null;
+  else
+    raise notice 'Há clientes com o mesmo WhatsApp. Resolva pelo filtro "Repetidas" do painel e rode o script de novo.';
+  end if;
+
+  if not exists (
+    select 1 from public.clients group by public.name_key(name) having count(*) > 1
+  ) then
+    create unique index if not exists clients_name_unique on public.clients (public.name_key(name));
+  else
+    raise notice 'Há clientes com o mesmo nome. Resolva pelo filtro "Repetidas" do painel e rode o script de novo.';
+  end if;
+end;
+$$;
+
+-- ---------------------------------------------------------------------
+-- 8c. Lista de clientes com indicadores (a tela busca aos poucos, com filtros)
+--     visitas, total gasto, ticket médio, a receber, faltas, primeira/última/próxima visita
+-- ---------------------------------------------------------------------
+drop view if exists public.client_overview;
+drop view if exists public.client_list;
+
+create view public.client_list
+with (security_invoker = true) as
+select
+  c.*,
+  public.name_key(c.name) as name_key,
+  extract(month from c.birthday)::int as birthday_month,
+  coalesce(s.visits, 0)::int as visits,
+  coalesce(s.total_spent, 0)::numeric(12,2) as total_spent,
+  (case when s.visits > 0 then round(s.total_spent / s.visits, 2) else 0 end)::numeric(12,2) as avg_ticket,
+  coalesce(s.to_receive, 0)::numeric(12,2) as to_receive,
+  coalesce(s.no_shows, 0)::int as no_shows,
+  s.first_visit,
+  s.last_visit,
+  s.next_visit,
+  ((now() at time zone 'America/Sao_Paulo')::date - s.last_visit::date) as days_since_last,
+  (
+    (c.whatsapp is not null and exists (
+      select 1 from public.clients o
+      where o.id <> c.id and public.phone_key(o.whatsapp) = public.phone_key(c.whatsapp)
+    ))
+    or exists (
+      select 1 from public.clients o
+      where o.id <> c.id and public.name_key(o.name) = public.name_key(c.name)
+    )
+  ) as has_duplicate
+from public.clients c
+left join lateral (
+  select
+    count(*) filter (where a.status = 'concluido') as visits,
+    sum(a.price) filter (where a.status = 'concluido') as total_spent,
+    sum(a.price) filter (where a.status = 'concluido' and not a.paid) as to_receive,
+    count(*) filter (where a.status = 'faltou') as no_shows,
+    min(a.starts_at) filter (where a.status = 'concluido') as first_visit,
+    max(a.starts_at) filter (where a.status = 'concluido') as last_visit,
+    min(a.starts_at) filter (
+      where a.status in ('agendado', 'confirmado')
+        and a.starts_at >= (now() at time zone 'America/Sao_Paulo')
+    ) as next_visit
+  from public.appointments a
+  where a.client_id = c.id
+) s on true;
+
+-- Resumo do topo da tela e contagem de cada filtro.
+-- Regras (iguais às do painel): recorrente = 3+ visitas · sumida = 60+ dias sem vir e sem horário marcado
+-- · nova = cadastrada nos últimos 30 dias · ativa = veio nos últimos 60 dias ou tem horário marcado.
+create view public.client_overview
+with (security_invoker = true) as
+select
+  count(*)::int as total,
+  count(*) filter (
+    where (created_at at time zone 'America/Sao_Paulo') >= date_trunc('month', now() at time zone 'America/Sao_Paulo')
+  )::int as new_this_month,
+  count(*) filter (where days_since_last <= 60 or next_visit is not null)::int as active,
+  count(*) filter (where visits >= 3)::int as loyal,
+  count(*) filter (where days_since_last > 60 and next_visit is null)::int as lapsed,
+  count(*) filter (where created_at >= now() - interval '30 days')::int as recent,
+  count(*) filter (where visits = 0)::int as never,
+  count(*) filter (where birthday_month = extract(month from now() at time zone 'America/Sao_Paulo'))::int as birthdays,
+  count(*) filter (where has_duplicate)::int as duplicates,
+  coalesce(sum(total_spent), 0)::numeric(12,2) as revenue,
+  coalesce(sum(to_receive), 0)::numeric(12,2) as to_receive,
+  (case when sum(visits) > 0 then round(sum(total_spent) / sum(visits), 2) else 0 end)::numeric(12,2) as avg_ticket
+from public.client_list;
+
+-- ---------------------------------------------------------------------
 -- 9. Segurança: Row Level Security (RLS)
 --    • Painel: só o e-mail de admin_users lê e escreve.
 --    • Formulário público (anon): só pode INSERIR lead, nunca ler.

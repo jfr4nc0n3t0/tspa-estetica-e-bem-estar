@@ -48,6 +48,38 @@ export type ClientStats = {
   next_visit: string | null;
 };
 
+/** Linha da lista de clientes (view client_list): cadastro + indicadores */
+export type ClientRow = Client & {
+  name_key: string;
+  birthday_month: number | null;
+  visits: number;
+  total_spent: number;
+  avg_ticket: number;
+  to_receive: number;
+  no_shows: number;
+  first_visit: string | null;
+  last_visit: string | null;
+  next_visit: string | null;
+  days_since_last: number | null;
+  has_duplicate: boolean;
+};
+
+/** Resumo do topo da tela de clientes (view client_overview) */
+export type ClientOverview = {
+  total: number;
+  new_this_month: number;
+  active: number;
+  loyal: number;
+  lapsed: number;
+  recent: number;
+  never: number;
+  birthdays: number;
+  duplicates: number;
+  revenue: number;
+  to_receive: number;
+  avg_ticket: number;
+};
+
 export type Appointment = {
   id: string;
   client_id: string;

@@ -77,3 +77,14 @@ const brlRoundFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", cu
 export function brlRound(value: number | string | null | undefined) {
   return brlRoundFormatter.format(Math.round(Number(value ?? 0)));
 }
+
+/** Telefone comparável: só dígitos, sem o 55 do Brasil (igual a phone_key no banco) */
+export function phoneKey(value: string | null | undefined) {
+  const d = (value ?? "").replace(/\D/g, "");
+  return d.length >= 12 && d.startsWith("55") ? d.slice(2) : d;
+}
+
+/** Nome comparável: sem acentos, minúsculo e sem espaços extras (igual a name_key no banco) */
+export function nameKey(value: string | null | undefined) {
+  return normalize(value ?? "").replace(/\s+/g, " ").trim();
+}
