@@ -717,6 +717,10 @@ revoke all on all tables in schema public from anon;
 alter default privileges in schema public revoke all on tables from anon;
 
 grant select, insert, update, delete on all tables in schema public to authenticated;
+-- Chave de serviço (usada só pela função de notificações, no servidor): acesso às tabelas.
+-- Projetos novos do Supabase não dão essa permissão sozinhos para tabelas criadas pelo SQL Editor.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on all tables in schema public to service_role;
 revoke all on public.admin_users from authenticated;
 revoke all on public.push_log from authenticated;
 revoke all on function public.submit_lead(text, text, text, text) from public;
