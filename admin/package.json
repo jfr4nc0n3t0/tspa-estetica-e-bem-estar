@@ -13,7 +13,8 @@
     "local:stop": "sh local/compose.sh stop",
     "local:reset": "sh local/compose.sh down -v",
     "backup": "sh backup/backup.sh",
-    "restore": "sh backup/restore.sh"
+    "restore": "sh backup/restore.sh",
+    "push:keys": "node scripts/vapid-keys.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

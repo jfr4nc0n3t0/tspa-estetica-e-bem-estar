@@ -8,6 +8,8 @@ export type Settings = {
   open_time: string; // "08:00:00"
   close_time: string;
   room2_enabled: boolean;
+  notify_daily_time: string; // "07:30:00"
+  notify_before_min: number;
 };
 
 export type Service = {

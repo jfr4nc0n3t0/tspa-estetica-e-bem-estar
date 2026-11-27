@@ -5,6 +5,7 @@ import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
 import { Badge, Button, Card, Field, Input, PageHeader, SectionTitle, Segmented, Select, Switch } from "../components/ui";
 import { useAppData } from "../lib/appData";
+import { NotificationsSettings } from "./NotificationsSettings";
 import { friendlyError } from "../lib/errors";
 import { brl, minutesToTime } from "../lib/format";
 import { run, supabase } from "../lib/supabase";
@@ -152,6 +153,9 @@ export default function Mais() {
           description="Ligada, a Sala 2 recebe atendimentos ao mesmo tempo que a Sala 1: um serviço sem profissional (ex.: ofurô ou sauna) ou o atendimento de outra profissional."
         />
       </Card>
+
+      <SectionTitle>Notificações</SectionTitle>
+      <NotificationsSettings />
 
       <SectionTitle>Formulário de interesse</SectionTitle>
       <Card className="divide-y divide-border/70">

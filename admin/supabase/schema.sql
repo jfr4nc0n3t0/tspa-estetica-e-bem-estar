@@ -651,6 +651,35 @@ select
 from public.client_list;
 
 -- ---------------------------------------------------------------------
+-- 8d. Notificações no celular (resumo do dia e lembrete antes do atendimento)
+--     O envio é feito pela função push-agenda (veja admin/NOTIFICACOES.md).
+-- ---------------------------------------------------------------------
+alter table public.settings add column if not exists notify_daily_time time not null default '07:30';
+alter table public.settings add column if not exists notify_before_min smallint not null default 30;
+alter table public.settings drop constraint if exists settings_notify_before;
+alter table public.settings add constraint settings_notify_before check (notify_before_min between 5 and 240);
+
+-- Aparelhos que recebem as notificações (um por celular/navegador ativado)
+create table if not exists public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  endpoint text not null unique check (endpoint like 'https://%'),
+  p256dh text not null,
+  auth text not null,
+  device text,
+  created_at timestamptz not null default now(),
+  last_success_at timestamptz
+);
+
+-- O que já foi enviado (para não repetir). Só a função de envio lê e escreve.
+create table if not exists public.push_log (
+  kind text not null check (kind in ('resumo', 'lembrete')),
+  ref text not null,
+  sent_at timestamptz not null default now(),
+  primary key (kind, ref)
+);
+delete from public.push_log where sent_at < now() - interval '30 days';
+
+-- ---------------------------------------------------------------------
 -- 9. Segurança: Row Level Security (RLS)
 --    • Painel: só o e-mail de admin_users lê e escreve.
 --    • Formulário público (anon): só pode INSERIR lead, nunca ler.
@@ -664,12 +693,14 @@ alter table public.appointments enable row level security;
 alter table public.transactions enable row level security;
 alter table public.leads        enable row level security;
 alter table public.recurring_expenses enable row level security;
+alter table public.push_subscriptions enable row level security;
+alter table public.push_log   enable row level security;   -- sem política: só a função de envio (service role) acessa
 
 do $$
 declare
   t text;
 begin
-  foreach t in array array['settings', 'services', 'professionals', 'clients', 'appointments', 'transactions', 'recurring_expenses', 'leads'] loop
+  foreach t in array array['settings', 'services', 'professionals', 'clients', 'appointments', 'transactions', 'recurring_expenses', 'leads', 'push_subscriptions'] loop
     execute format('drop policy if exists admin_all on public.%I', t);
     execute format(
       'create policy admin_all on public.%I for all to authenticated using (public.is_admin()) with check (public.is_admin())',
@@ -687,6 +718,7 @@ alter default privileges in schema public revoke all on tables from anon;
 
 grant select, insert, update, delete on all tables in schema public to authenticated;
 revoke all on public.admin_users from authenticated;
+revoke all on public.push_log from authenticated;
 revoke all on function public.submit_lead(text, text, text, text) from public;
 grant execute on function public.submit_lead(text, text, text, text) to anon, authenticated;
 

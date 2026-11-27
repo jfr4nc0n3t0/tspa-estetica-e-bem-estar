@@ -1,0 +1,6 @@
+# Usado só pelo "npx supabase functions deploy" (veja admin/NOTIFICACOES.md).
+project_id = "tspa"
+
+[functions.push-agenda]
+# A função faz a própria verificação: segredo do agendador ou login da dona.
+verify_jwt = false

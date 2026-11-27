@@ -11,6 +11,7 @@ O que tem em cada lugar:
 | `admin/supabase/schema.sql` | O script único do banco (tabelas, regras de conflito, segurança). |
 | `client/src/pages/Agendar.tsx` | A página pública `tspa.com.br/agendar` (formulário de interesse). |
 | `functions/api/leads.ts` | A rota `POST /api/leads` (Cloudflare), que recebe o formulário e grava o lead no Supabase. |
+| `admin/NOTIFICACOES.md` | Como ligar as notificações no celular (resumo do dia e lembretes). |
 
 > **Importante:** site e painel publicam sozinhos (Cloudflare Pages) a cada push na `main`.
 

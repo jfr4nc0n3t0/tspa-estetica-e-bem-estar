@@ -16,7 +16,7 @@ type AppData = {
 
 const AppDataContext = createContext<AppData | null>(null);
 
-const DEFAULT_SETTINGS: Settings = { open_time: "08:00:00", close_time: "20:00:00", room2_enabled: false };
+const DEFAULT_SETTINGS: Settings = { open_time: "08:00:00", close_time: "20:00:00", room2_enabled: false, notify_daily_time: "07:30:00", notify_before_min: 30 };
 
 export function AppDataProvider({ email, children }: { email: string; children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -24,8 +24,9 @@ export function AppDataProvider({ email, children }: { email: string; children: 
   const [professionals, setProfessionals] = useState<Professional[]>([]);
 
   const refreshSettings = useCallback(async () => {
-    const row = await run(supabase.from("settings").select("open_time, close_time, room2_enabled").eq("id", 1).maybeSingle());
-    if (row) setSettings(row as Settings);
+    // "*" + padrão: se o banco ainda não tiver alguma coluna nova, o painel continua funcionando
+    const row = await run(supabase.from("settings").select("*").eq("id", 1).maybeSingle());
+    if (row) setSettings({ ...DEFAULT_SETTINGS, ...(row as Partial<Settings>) });
   }, []);
 
   const refreshServices = useCallback(async () => {
