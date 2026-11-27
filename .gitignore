@@ -13,3 +13,7 @@ marketing/
 *.local
 .dev.vars
 .wrangler/
+
+# Arquivos temporários da CLI do Supabase (vínculo com o projeto)
+supabase/.temp/
+admin/supabase/.temp/
