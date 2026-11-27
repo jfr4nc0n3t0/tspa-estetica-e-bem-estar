@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Clock } from "lucide-react";
 import { experiences } from "@/data/services";
 import { agendarUrl } from "@/lib/contact";
 import PhotoCarousel from "./PhotoCarousel";
@@ -27,7 +27,9 @@ export default function RitualsSection() {
               images={signature.images}
               label={signature.name}
               className="aspect-[4/3] lg:aspect-auto lg:min-h-[28rem]"
-            />
+            >
+              <DurationChip duration={signature.duration} />
+            </PhotoCarousel>
             <div className="flex flex-col justify-center p-8 md:p-12">
               <span className="self-start rounded-full border border-sand/50 px-3 py-1 text-[0.7rem] uppercase tracking-[0.22em] text-sand">
                 Experiência mais completa
@@ -54,7 +56,9 @@ export default function RitualsSection() {
                   images={experience.images}
                   label={experience.name}
                   className="aspect-[4/5] rounded-[1.25rem]"
-                />
+                >
+                  <DurationChip duration={experience.duration} />
+                </PhotoCarousel>
                 <h3 className="mt-5 font-serif text-2xl">{experience.name}</h3>
                 <p className="mt-1 text-xs uppercase tracking-[0.14em] text-sand/90">{experience.combination}</p>
                 <p className="mt-3 text-sm leading-relaxed text-white/70">{experience.phrase}</p>
@@ -71,5 +75,15 @@ export default function RitualsSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function DurationChip({ duration }: { duration: string }) {
+  return (
+    <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground backdrop-blur">
+      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+      <span className="sr-only">Duração: </span>
+      {duration}
+    </span>
   );
 }

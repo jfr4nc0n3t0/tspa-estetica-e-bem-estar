@@ -9,6 +9,7 @@ import PlansSection from "@/components/PlansSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import LocationSection from "@/components/LocationSection";
 import Footer from "@/components/Footer";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 
 export default function Home() {
   // Vindo de outra página com link para uma seção (ex.: /#servicos), rola até ela depois de montar
@@ -33,6 +34,7 @@ export default function Home() {
         <LocationSection />
       </main>
       <Footer />
+      <FloatingWhatsApp />
     </div>
   );
 }

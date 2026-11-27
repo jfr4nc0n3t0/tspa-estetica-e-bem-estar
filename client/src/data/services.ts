@@ -31,12 +31,15 @@ export type Session = {
   characteristic: string;
   phrase: string;
   images: string[];
-  note?: string;
+  /** Só existe junto de outro cuidado (ex.: Ritual dos Pés): sem botão de agendar próprio */
+  complement?: boolean;
 };
 
 export type Experience = {
   id: string;
   name: string;
+  /** Duração total (soma dos serviços que compõem o ritual) */
+  duration: string;
   combination: string;
   characteristic: string;
   phrase: string;
@@ -97,7 +100,7 @@ export const feetRitual: Session[] = [
     characteristic: "Uma pausa acolhedora para os pés",
     phrase: "Um ritual delicado para desacelerar, aliviar a sensação de cansaço e preparar o corpo para um momento de descanso.",
     images: photosOf("ritual-dos-pes"),
-    note: "Disponível como complemento de outro serviço.",
+    complement: true,
   },
 ];
 
@@ -131,6 +134,7 @@ export const headSpaServices: Session[] = [
 export const experiences: Experience[] = [
   {
     id: "ritual-leveza",
+    duration: "1h30",
     name: "Ritual Leveza",
     combination: "Massagem Relaxante + Ritual dos Pés",
     characteristic: "Relaxamento dos pés ao corpo",
@@ -143,6 +147,7 @@ export const experiences: Experience[] = [
   },
   {
     id: "ritual-pele-renovada",
+    duration: "1h50",
     name: "Ritual Pele Renovada",
     combination: "Limpeza de Pele + Hidratação Facial",
     characteristic: "Um cuidado facial completo",
@@ -156,6 +161,7 @@ export const experiences: Experience[] = [
   },
   {
     id: "ritual-desacelerar",
+    duration: "1h15",
     name: "Ritual Desacelerar",
     combination: "Head Spa Imersão + Ritual dos Pés",
     characteristic: "Uma pausa da cabeça aos pés",
@@ -168,6 +174,7 @@ export const experiences: Experience[] = [
   },
   {
     id: "ritual-conexao",
+    duration: "1h45",
     name: "Ritual Conexão",
     combination: "Head Spa Imersão + Massagem Relaxante",
     characteristic: "Relaxamento que continua pelo corpo",
@@ -181,6 +188,7 @@ export const experiences: Experience[] = [
   },
   {
     id: "ritual-tspa",
+    duration: "2h30",
     name: "Ritual TSpa",
     combination: "Head Spa Ritual + Massagem Relaxante + Ritual dos Pés",
     characteristic: "A experiência TSpa mais completa",
