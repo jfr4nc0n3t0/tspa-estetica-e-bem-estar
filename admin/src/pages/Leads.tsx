@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowRight, CalendarPlus, ChevronDown, Flame, Info, MessageCircle, Plus, Snowflake, Thermometer } from "lucide-react";
+import { CalendarPlus, Check, ChevronDown, Flame, Info, MessageCircle, Plus, Search, SlidersHorizontal, Snowflake, Thermometer } from "lucide-react";
 import { useLocation } from "wouter";
+import { Kanban, type KanbanColumn } from "../components/Kanban";
+import { MenuOption, MenuSection, Popover } from "../components/Popover";
 import { Sheet } from "../components/Sheet";
 import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
-import { Badge, Button, Card, ErrorBox, Field, Input, PageHeader, Select, Spinner, Stat, Textarea, cx } from "../components/ui";
+import { Badge, Button, Card, ErrorBox, Field, Input, PageHeader, Select, Spinner, Textarea, cx } from "../components/ui";
 import { friendlyError } from "../lib/errors";
-import { fmt, phone } from "../lib/format";
+import { firstName, fmt, normalize, plural } from "../lib/format";
 import { COLD_AFTER_DAYS, TEMPERATURE_LABEL, leadReference, leadTemperature, type Temperature } from "../lib/leadTemperature";
 import { useLoad } from "../lib/hooks";
 import { run, supabase } from "../lib/supabase";
@@ -16,7 +18,6 @@ import { SOURCE_LABEL, STAGE_LABEL, type Lead, type LeadSource, type LeadStage }
 import { leadMessage, waLink } from "../lib/whatsapp";
 
 const STAGES: LeadStage[] = ["novo", "em_contato", "agendou", "perdido"];
-const NEXT: Partial<Record<LeadStage, LeadStage>> = { novo: "em_contato", em_contato: "agendou" };
 
 const GUIDE_KEY = "tspa-leads-guia";
 
@@ -26,12 +27,27 @@ const TEMPERATURE_STYLE: Record<Temperature, { className: string; icon: typeof F
   frio: { className: "bg-dusk/15 text-dusk ring-1 ring-inset ring-dusk/30", icon: Snowflake },
 };
 
+type Show = "todos" | Temperature | "cliente";
+type Sort = "espera" | "recentes" | "nome";
+const SORT_LABEL: Record<Sort, string> = { espera: "Esperando há mais tempo", recentes: "Mais recentes", nome: "Nome (A–Z)" };
+const SHOW_LABEL: Record<Show, string> = { todos: "Todos", quente: "Quentes", morno: "Mornos", frio: "Frios", cliente: "Já é cliente" };
+const SOURCES = Object.keys(SOURCE_LABEL) as LeadSource[];
+
+const COLUMNS: KanbanColumn<LeadStage>[] = [
+  { id: "novo", title: STAGE_LABEL.novo },
+  { id: "em_contato", title: STAGE_LABEL.em_contato, shortTitle: "Contato" },
+  { id: "agendou", title: STAGE_LABEL.agendou, dropHint: "Soltar aqui abre o agendamento" },
+  { id: "perdido", title: STAGE_LABEL.perdido, muted: true },
+];
+
 export default function Leads() {
   const toast = useToast();
   const [, navigate] = useLocation();
-  const [stage, setStage] = useState<LeadStage>("novo");
   const [editing, setEditing] = useState<Lead | "new" | null>(null);
-  const [tempFilter, setTempFilter] = useState<Temperature | null>(null);
+  const [search, setSearch] = useState("");
+  const [show, setShow] = useState<Show>("todos");
+  const [source, setSource] = useState<LeadSource | null>(null);
+  const [sort, setSort] = useState<Sort>("espera");
   // Guia "Como funciona": aberto na primeira visita, depois lembra a escolha
   const [guideOpen, setGuideOpen] = useState(() => {
     try {
@@ -55,50 +71,53 @@ export default function Leads() {
     () => run(supabase.from("leads").select("*").order("created_at", { ascending: false })) as Promise<Lead[]>,
     [],
   );
-  // No funil (Novos/Em contato), quem está esperando há mais tempo aparece primeiro
-  const leads = useMemo(
-    () =>
-      [...(data ?? [])].sort((a, b) => {
-        const open = (l: Lead) => l.stage === "novo" || l.stage === "em_contato";
-        if (open(a) && open(b)) return leadReference(a).localeCompare(leadReference(b));
-        return b.created_at.localeCompare(a.created_at);
-      }),
-    [data],
-  );
-  const tempCounts = useMemo(() => {
-    const counts: Record<Temperature, number> = { quente: 0, morno: 0, frio: 0 };
-    for (const l of leads) {
-      const t = leadTemperature(l);
-      if (t) counts[t.temperature] += 1;
-    }
-    return counts;
-  }, [leads]);
-  const visible = (l: Lead) => !tempFilter || leadTemperature(l)?.temperature === tempFilter;
+  const all = data ?? [];
+
+  const matchesShow = (l: Lead, s: Show) =>
+    s === "todos" ? true : s === "cliente" ? Boolean(l.client_id) : leadTemperature(l)?.temperature === s;
+
+  const leads = useMemo(() => {
+    const term = normalize(search.trim());
+    const digits = search.replace(/\D/g, "");
+    const list = all.filter(
+      (l) =>
+        matchesShow(l, show) &&
+        (!source || l.source === source) &&
+        (!term ||
+          normalize(l.name).includes(term) ||
+          normalize(l.interest ?? "").includes(term) ||
+          (digits.length >= 3 && l.whatsapp.includes(digits))),
+    );
+    return list.sort((a, b) => {
+      if (sort === "nome") return a.name.localeCompare(b.name, "pt-BR");
+      if (sort === "recentes") return b.created_at.localeCompare(a.created_at);
+      // Padrão: no funil, quem está esperando há mais tempo primeiro; nas outras, os mais recentes
+      const open = (l: Lead) => l.stage === "novo" || l.stage === "em_contato";
+      if (open(a) && open(b)) return leadReference(a).localeCompare(leadReference(b));
+      return b.created_at.localeCompare(a.created_at);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [all, search, show, source, sort]);
 
   const metrics = useMemo(() => {
-    const total = leads.length;
-    const converted = leads.filter((l) => l.stage === "agendou").length;
+    const total = all.length;
+    const converted = all.filter((l) => l.stage === "agendou").length;
     const bySource = new Map<LeadSource, { total: number; converted: number }>();
-    for (const l of leads) {
+    for (const l of all) {
       const cur = bySource.get(l.source) ?? { total: 0, converted: 0 };
       cur.total += 1;
       if (l.stage === "agendou") cur.converted += 1;
       bySource.set(l.source, cur);
     }
     const best = [...bySource.entries()].sort((a, b) => b[1].converted - a[1].converted || b[1].total - a[1].total)[0];
-    return {
-      total,
-      rate: total ? Math.round((converted / total) * 100) : 0,
-      converted,
-      best: best ? { source: best[0], ...best[1] } : null,
-    };
-  }, [leads]);
+    const cold = all.filter((l) => leadTemperature(l)?.temperature === "frio").length;
+    return { total, rate: total ? Math.round((converted / total) * 100) : 0, best: best && best[1].converted > 0 ? best[0] : null, cold };
+  }, [all]);
 
-  /** Muda a etapa e/ou registra um contato agora (o lead "esquenta"). */
-  async function updateStage(lead: Lead, next: LeadStage) {
-    const last_contact_at = new Date().toISOString();
-    setData((list) => (list ?? []).map((l) => (l.id === lead.id ? { ...l, stage: next, last_contact_at } : l)));
-    const { error } = await supabase.from("leads").update({ stage: next, last_contact_at }).eq("id", lead.id);
+  /** Muda a etapa e registra contato agora (o lead "esquenta"). Devolve o estado anterior para desfazer. */
+  async function setStage(lead: Lead, next: LeadStage, lastContact: string | null = new Date().toISOString()) {
+    setData((list) => (list ?? []).map((l) => (l.id === lead.id ? { ...l, stage: next, last_contact_at: lastContact } : l)));
+    const { error } = await supabase.from("leads").update({ stage: next, last_contact_at: lastContact }).eq("id", lead.id);
     if (error) {
       toast(friendlyError(error), "error");
       reload();
@@ -110,78 +129,46 @@ export default function Leads() {
     navigate(`/agenda?lead=${lead.id}`);
   }
 
+  function move(lead: Lead, to: LeadStage) {
+    if (to === lead.stage) return;
+    if (to === "agendou") return schedule(lead);
+    const before = { stage: lead.stage, last_contact_at: lead.last_contact_at };
+    setStage(lead, to);
+    toast(`${firstName(lead.name)} foi para ${STAGE_LABEL[to]}.`, "ok", {
+      label: "Desfazer",
+      onClick: () => setStage(lead, before.stage, before.last_contact_at),
+    });
+  }
+
   function openWhatsapp(lead: Lead) {
     window.open(waLink(lead.whatsapp, leadMessage(lead.name, lead.interest)), "_blank", "noopener");
     // Conta como contato: Novos → Em contato, e a temperatura volta a "quente"
-    updateStage(lead, lead.stage === "novo" ? "em_contato" : lead.stage);
+    setStage(lead, lead.stage === "novo" ? "em_contato" : lead.stage);
   }
 
-  const counts = Object.fromEntries(STAGES.map((s) => [s, leads.filter((l) => l.stage === s && visible(l)).length])) as Record<LeadStage, number>;
+  const customized = show !== "todos" || source !== null || sort !== "espera";
+  const summary = [show !== "todos" && SHOW_LABEL[show], source && SOURCE_LABEL[source], sort !== "espera" && SORT_LABEL[sort].toLowerCase()].filter(Boolean).join(" · ");
 
-  function toggleTemp(t: Temperature) {
-    const next = tempFilter === t ? null : t;
-    setTempFilter(next);
-    // No celular, pula para a aba que tem leads dessa temperatura
-    if (next) {
-      const first = STAGES.find((s) => leads.some((l) => l.stage === s && leadTemperature(l)?.temperature === next));
-      if (first) setStage(first);
-    }
-  }
-
-  const TEMP_BORDER: Record<Temperature, string> = {
-    quente: "border-l-4 border-l-terracotta",
-    morno: "border-l-4 border-l-ochre",
-    frio: "border-l-4 border-l-dusk",
-  };
-  const card = (lead: Lead) => (
-    <Card key={lead.id} className={cx("p-3.5", leadTemperature(lead) && TEMP_BORDER[leadTemperature(lead)!.temperature])}>
-      <button type="button" className="block w-full text-left" onClick={() => setEditing(lead)}>
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-medium leading-snug">{lead.name}</p>
-          <Badge>{SOURCE_LABEL[lead.source]}</Badge>
-        </div>
-        {lead.interest && <p className="mt-1 text-sm text-foreground/80">{lead.interest}</p>}
-        {((lead.submissions ?? 1) > 1 || lead.client_id) && (
-          <p className="mt-1.5 flex flex-wrap gap-1.5">
-            {(lead.submissions ?? 1) > 1 && <Badge className="bg-primary/10 text-primary">enviou {lead.submissions}×</Badge>}
-            {lead.client_id && lead.stage !== "agendou" && <Badge className="bg-accent text-accent-foreground">já é cliente</Badge>}
-          </p>
-        )}
-        <p className="mt-1 text-xs text-muted-foreground">
-          {phone(lead.whatsapp)} · {formatDistanceToNow(parseISO(lead.created_at), { locale: ptBR, addSuffix: true })}
-        </p>
-        <TemperatureTag lead={lead} />
-      </button>
-      {lead.stage !== "perdido" && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => openWhatsapp(lead)}>
-            <MessageCircle className="h-4 w-4" /> WhatsApp
-          </Button>
-          {lead.stage !== "agendou" && (
-            <Button size="sm" variant="secondary" onClick={() => schedule(lead)}>
-              <CalendarPlus className="h-4 w-4" /> Agendar
-            </Button>
-          )}
-          {NEXT[lead.stage] && NEXT[lead.stage] !== "agendou" && (
-            <Button size="sm" variant="ghost" onClick={() => updateStage(lead, NEXT[lead.stage]!)}>
-              {STAGE_LABEL[NEXT[lead.stage]!]} <ArrowRight className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+  const subtitle = (
+    <span className="flex flex-wrap items-center gap-x-1.5">
+      {all.length > 0 && (
+        <span>
+          {plural(metrics.total, "lead", "leads")} · {metrics.rate}% agendaram
+          {metrics.best && ` · melhor origem: ${SOURCE_LABEL[metrics.best]}`} ·
+        </span>
       )}
-    </Card>
+      <button type="button" onClick={toggleGuide} className="inline-flex items-center gap-1 text-primary" aria-expanded={guideOpen}>
+        <Info className="h-3.5 w-3.5" aria-hidden="true" /> Como funciona
+        <ChevronDown className={cx("h-3.5 w-3.5 transition-transform", guideOpen && "rotate-180")} aria-hidden="true" />
+      </button>
+    </span>
   );
 
   return (
     <>
       <PageHeader
         title="Leads"
-        subtitle={
-          <button type="button" onClick={toggleGuide} className="inline-flex items-center gap-1 text-primary" aria-expanded={guideOpen}>
-            <Info className="h-3.5 w-3.5" aria-hidden="true" /> Como funciona
-            <ChevronDown className={cx("h-3.5 w-3.5 transition-transform", guideOpen && "rotate-180")} aria-hidden="true" />
-          </button>
-        }
+        subtitle={subtitle}
         action={
           <Button onClick={() => setEditing("new")} aria-label="Novo lead">
             <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Lead</span>
@@ -191,92 +178,193 @@ export default function Leads() {
 
       {guideOpen && <LeadsGuide onClose={toggleGuide} />}
 
-      {error ? (
-        <div><ErrorBox message={error} onRetry={reload} /></div>
-      ) : loading && !data ? (
-        <Spinner />
-      ) : (
-        <>
-          <div className="grid grid-cols-3 gap-2 md:gap-3">
-            <Stat label="Leads" value={metrics.total} />
-            <Stat label="Conversão" value={`${metrics.rate}%`} hint={`${metrics.converted} agendaram`} />
-            <Stat label="Melhor origem" value={metrics.best ? SOURCE_LABEL[metrics.best.source] : "—"} hint={metrics.best ? `${metrics.best.converted} de ${metrics.best.total}` : undefined} />
-          </div>
-
-          {/* Temperatura dos leads em aberto: toque para filtrar */}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            {(["quente", "morno", "frio"] as Temperature[]).map((t) => {
-              const Icon = TEMPERATURE_STYLE[t].icon;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => toggleTemp(t)}
-                  aria-pressed={tempFilter === t}
-                  className={cx(
-                    "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition",
-                    TEMPERATURE_STYLE[t].className,
-                    tempFilter === t && "ring-2 ring-current",
-                    tempFilter && tempFilter !== t && "opacity-50",
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                  {tempCounts[t]} {TEMPERATURE_LABEL[t].toLowerCase()}
-                  {tempCounts[t] !== 1 && "s"}
-                </button>
-              );
-            })}
-            {tempFilter && (
-              <button type="button" onClick={() => setTempFilter(null)} className="text-sm text-muted-foreground underline-offset-2 hover:underline">
-                Ver todos
-              </button>
-            )}
-          </div>
-          {tempCounts.frio > 0 && !tempFilter && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {tempCounts.frio === 1 ? "1 lead está" : `${tempCounts.frio} leads estão`} há {COLD_AFTER_DAYS} dias ou mais sem contato.{" "}
-              <button type="button" className="font-medium text-primary" onClick={() => toggleTemp("frio")}>
-                Ver frios
-              </button>
-            </p>
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input type="search" placeholder="Buscar por nome, WhatsApp ou interesse" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" aria-label="Buscar lead" />
+        </div>
+        <Popover
+          className="max-h-[70svh] w-64 overflow-y-auto"
+          trigger={({ open, toggle }) => (
+            <button
+              type="button"
+              onClick={toggle}
+              aria-haspopup="menu"
+              aria-expanded={open}
+              aria-label="Filtrar e ordenar"
+              title="Filtrar e ordenar"
+              className={cx(
+                "relative grid h-11 w-11 place-items-center rounded-xl border transition-colors",
+                customized || open ? "border-primary bg-primary/10 text-primary" : "border-input bg-card text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <SlidersHorizontal className="h-[18px] w-[18px]" />
+              {customized && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" aria-hidden="true" />}
+            </button>
           )}
-
-          {/* Celular: abas por etapa */}
-          <div className="mt-5 md:hidden">
-            <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-              {STAGES.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setStage(s)}
-                  className={cx("flex h-9 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-medium", stage === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}
-                >
-                  {STAGE_LABEL[s]} <span className="opacity-70">{counts[s]}</span>
-                </button>
-              ))}
+        >
+          {(close) => (
+            <div role="menu">
+              <MenuSection title="Mostrar">
+                {(Object.keys(SHOW_LABEL) as Show[]).map((s) => (
+                  <MenuOption key={s} selected={show === s} hint={all.filter((l) => matchesShow(l, s)).length} onSelect={() => { setShow(s); close(); }}>
+                    {show === s && <Check className="mr-1.5 inline h-3.5 w-3.5" />}
+                    {SHOW_LABEL[s]}
+                  </MenuOption>
+                ))}
+              </MenuSection>
+              <div className="mx-2 my-1.5 border-t border-border" />
+              <MenuSection title="Origem">
+                <MenuOption selected={source === null} onSelect={() => { setSource(null); close(); }}>
+                  {source === null && <Check className="mr-1.5 inline h-3.5 w-3.5" />}
+                  Todas
+                </MenuOption>
+                {SOURCES.filter((s) => all.some((l) => l.source === s)).map((s) => (
+                  <MenuOption key={s} selected={source === s} hint={all.filter((l) => l.source === s).length} onSelect={() => { setSource(s); close(); }}>
+                    {source === s && <Check className="mr-1.5 inline h-3.5 w-3.5" />}
+                    {SOURCE_LABEL[s]}
+                  </MenuOption>
+                ))}
+              </MenuSection>
+              <div className="mx-2 my-1.5 border-t border-border" />
+              <MenuSection title="Ordenar por">
+                {(Object.keys(SORT_LABEL) as Sort[]).map((s) => (
+                  <MenuOption key={s} selected={sort === s} onSelect={() => { setSort(s); close(); }}>
+                    {sort === s && <Check className="mr-1.5 inline h-3.5 w-3.5" />}
+                    {SORT_LABEL[s]}
+                  </MenuOption>
+                ))}
+              </MenuSection>
             </div>
-            <div className="mt-4 space-y-2">
-              {leads.filter((l) => l.stage === stage && visible(l)).map(card)}
-              {counts[stage] === 0 && <p className="py-10 text-center text-sm text-muted-foreground">Nenhum lead em “{STAGE_LABEL[stage]}”.</p>}
-            </div>
-          </div>
+          )}
+        </Popover>
+      </div>
 
-          {/* Computador: colunas do funil */}
-          <div className="mt-6 hidden grid-cols-4 gap-3 md:grid">
-            {STAGES.map((s) => (
-              <div key={s} className="min-w-0">
-                <p className="mb-2 flex items-center justify-between px-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  {STAGE_LABEL[s]} <span>{counts[s]}</span>
-                </p>
-                <div className="space-y-2">{leads.filter((l) => l.stage === s && visible(l)).map(card)}</div>
-              </div>
-            ))}
-          </div>
-        </>
+      {customized ? (
+        <p className="mt-2 text-sm text-muted-foreground">
+          Mostrando <strong className="font-medium text-foreground">{summary}</strong>
+          <button type="button" onClick={() => { setShow("todos"); setSource(null); setSort("espera"); }} className="ml-2 font-medium text-primary underline-offset-2 hover:underline">
+            Limpar
+          </button>
+        </p>
+      ) : (
+        metrics.cold > 0 && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {metrics.cold === 1 ? "1 lead está" : `${metrics.cold} leads estão`} há {COLD_AFTER_DAYS} dias ou mais sem contato.{" "}
+            <button type="button" className="font-medium text-primary" onClick={() => setShow("frio")}>
+              Ver frios
+            </button>
+          </p>
+        )
       )}
+
+      <div className="mt-4">
+        {error ? (
+          <ErrorBox message={error} onRetry={reload} />
+        ) : loading && !data ? (
+          <Spinner />
+        ) : (
+          <Kanban
+            columns={COLUMNS}
+            items={leads}
+            getId={(l) => l.id}
+            getColumn={(l) => l.stage}
+            onMove={move}
+            empty={(c) => <p className="px-2 py-6 text-center text-sm text-muted-foreground">{search || customized ? "Nenhum lead neste filtro." : `Nenhum lead em “${c.title}”.`}</p>}
+            renderCard={(lead, { dragging }) => (
+              <LeadCard
+                lead={lead}
+                dragging={dragging}
+                onOpen={() => setEditing(lead)}
+                onWhatsapp={() => openWhatsapp(lead)}
+                onSchedule={() => schedule(lead)}
+                onMove={(to) => move(lead, to)}
+              />
+            )}
+          />
+        )}
+      </div>
 
       <LeadSheet lead={editing === "new" ? null : editing} open={editing !== null} onClose={() => setEditing(null)} onSaved={reload} />
     </>
+  );
+}
+
+const TEMP_BORDER: Record<Temperature, string> = {
+  quente: "border-l-4 border-l-terracotta",
+  morno: "border-l-4 border-l-ochre",
+  frio: "border-l-4 border-l-dusk",
+};
+
+function LeadCard({ lead, dragging, onOpen, onWhatsapp, onSchedule, onMove }: {
+  lead: Lead;
+  dragging: boolean;
+  onOpen: () => void;
+  onWhatsapp: () => void;
+  onSchedule: () => void;
+  onMove: (to: LeadStage) => void;
+}) {
+  const temp = leadTemperature(lead);
+  const closed = lead.stage === "perdido";
+  return (
+    <Card className={cx("p-3", temp && TEMP_BORDER[temp.temperature], dragging ? "cursor-grabbing" : "cursor-grab")}>
+      <button type="button" className="block w-full text-left" onClick={onOpen}>
+        <span className="flex items-start justify-between gap-2">
+          <span className={cx("font-medium leading-snug", closed && "text-muted-foreground")}>{lead.name}</span>
+          <Badge>{SOURCE_LABEL[lead.source]}</Badge>
+        </span>
+        {(lead.interest || (closed && lead.notes)) && (
+          <span className="mt-0.5 line-clamp-2 block text-sm text-muted-foreground">{lead.interest || lead.notes}</span>
+        )}
+        {((lead.submissions ?? 1) > 1 || (lead.client_id && lead.stage !== "agendou")) && (
+          <span className="mt-1.5 flex flex-wrap gap-1.5">
+            {(lead.submissions ?? 1) > 1 && <Badge className="bg-primary/10 text-primary">enviou {lead.submissions}×</Badge>}
+            {lead.client_id && lead.stage !== "agendou" && <Badge className="bg-accent text-accent-foreground">já é cliente</Badge>}
+          </span>
+        )}
+        {temp ? (
+          <TemperatureTag lead={lead} />
+        ) : (
+          <span className="mt-1 block text-xs text-muted-foreground">{formatDistanceToNow(parseISO(lead.created_at), { locale: ptBR, addSuffix: true })}</span>
+        )}
+      </button>
+      {!dragging && (
+        <div className="mt-2.5 flex items-center gap-1.5">
+          {!closed && (
+            <button type="button" onClick={onWhatsapp} aria-label={`WhatsApp de ${lead.name}`} title="WhatsApp" className="grid h-8 w-8 place-items-center rounded-full border border-input text-muted-foreground hover:bg-muted hover:text-foreground">
+              <MessageCircle className="h-4 w-4" />
+            </button>
+          )}
+          {lead.stage !== "agendou" && !closed && (
+            <button type="button" onClick={onSchedule} aria-label={`Agendar ${lead.name}`} title="Agendar" className="grid h-8 w-8 place-items-center rounded-full border border-input text-muted-foreground hover:bg-muted hover:text-foreground">
+              <CalendarPlus className="h-4 w-4" />
+            </button>
+          )}
+          <span className="ml-auto">
+            <Popover
+              className="w-48"
+              trigger={({ open, toggle }) => (
+                <button type="button" onClick={toggle} aria-haspopup="menu" aria-expanded={open} className="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+                  Mover <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              )}
+            >
+              {(close) => (
+                <div role="menu">
+                  <MenuSection title="Mover para">
+                    {STAGES.filter((s) => s !== lead.stage).map((s) => (
+                      <MenuOption key={s} selected={false} onSelect={() => { close(); onMove(s); }}>
+                        {s === "agendou" ? "Agendou (abre agendamento)" : STAGE_LABEL[s]}
+                      </MenuOption>
+                    ))}
+                  </MenuSection>
+                </div>
+              )}
+            </Popover>
+          </span>
+        </div>
+      )}
+    </Card>
   );
 }
 
