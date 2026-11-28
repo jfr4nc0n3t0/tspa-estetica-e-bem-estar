@@ -861,6 +861,27 @@ create table if not exists public.push_log (
 delete from public.push_log where sent_at < now() - interval '30 days';
 
 -- ---------------------------------------------------------------------
+-- 8e. Mensagens editáveis (Mais → Mensagens)
+--     Guarda só os textos que a dona mudou; sem linha = texto original (fica no código).
+--     As mensagens "site_..." são lidas pelo site, pela função site_messages().
+-- ---------------------------------------------------------------------
+create table if not exists public.message_templates (
+  key text primary key check (key ~ '^[a-z][a-z_]{2,40}$'),
+  body text not null check (char_length(btrim(body)) between 1 and 2000),
+  updated_at timestamptz not null default now()
+);
+
+create or replace function public.site_messages()
+returns table (key text, body text)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select m.key, m.body from public.message_templates m where m.key like 'site\_%';
+$$;
+
+-- ---------------------------------------------------------------------
 -- 9. Segurança: Row Level Security (RLS)
 --    • Painel: só o e-mail de admin_users lê e escreve.
 --    • Formulário público (anon): só pode INSERIR lead, nunca ler.
@@ -876,13 +897,14 @@ alter table public.leads        enable row level security;
 alter table public.recurring_expenses enable row level security;
 alter table public.client_packages enable row level security;
 alter table public.push_subscriptions enable row level security;
+alter table public.message_templates enable row level security;
 alter table public.push_log   enable row level security;   -- sem política: só a função de envio (service role) acessa
 
 do $$
 declare
   t text;
 begin
-  foreach t in array array['settings', 'services', 'professionals', 'clients', 'appointments', 'transactions', 'recurring_expenses', 'leads', 'push_subscriptions', 'client_packages'] loop
+  foreach t in array array['settings', 'services', 'professionals', 'clients', 'appointments', 'transactions', 'recurring_expenses', 'leads', 'push_subscriptions', 'client_packages', 'message_templates'] loop
     execute format('drop policy if exists admin_all on public.%I', t);
     execute format(
       'create policy admin_all on public.%I for all to authenticated using (public.is_admin()) with check (public.is_admin())',
@@ -907,6 +929,8 @@ revoke all on public.admin_users from authenticated;
 revoke all on public.push_log from authenticated;
 revoke all on function public.submit_lead(text, text, text, text) from public;
 grant execute on function public.submit_lead(text, text, text, text) to anon, authenticated;
+revoke all on function public.site_messages() from public;
+grant execute on function public.site_messages() to anon, authenticated;
 
 grant execute on function public.is_admin() to authenticated;
 

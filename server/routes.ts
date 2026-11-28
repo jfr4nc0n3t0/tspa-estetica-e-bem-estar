@@ -1,6 +1,7 @@
 import type { Express, Request } from "express";
 import { type Server } from "http";
 import { handleLead } from "@shared/leads";
+import { fetchSiteMessages } from "@shared/siteMessages";
 
 // Limite simples por IP: no máximo 5 envios a cada 10 minutos
 const WINDOW_MS = 10 * 60 * 1000;
@@ -32,6 +33,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const env = { SUPABASE_URL, SUPABASE_PUBLIC_KEY, TURNSTILE_SECRET_KEY, TURNSTILE_HOSTNAMES };
     const result = await handleLead(req.body, env, req.ip);
     return res.status(result.status).json(result.body);
+  });
+
+  // Textos dos botões de WhatsApp editados no painel. Na Cloudflare: functions/api/mensagens.ts.
+  app.get("/api/mensagens", async (_req, res) => {
+    const { SUPABASE_URL, SUPABASE_PUBLIC_KEY } = process.env;
+    const messages = await fetchSiteMessages({ SUPABASE_URL, SUPABASE_PUBLIC_KEY });
+    res.set("Cache-Control", "public, max-age=300").json({ messages });
   });
 
   return httpServer;

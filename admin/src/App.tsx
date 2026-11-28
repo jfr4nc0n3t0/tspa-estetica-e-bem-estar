@@ -13,6 +13,7 @@ import Financeiro from "./pages/Financeiro";
 import Clientes from "./pages/Clientes";
 import Leads from "./pages/Leads";
 import Mais from "./pages/Mais";
+import Mensagens from "./pages/Mensagens";
 
 export default function App() {
   if (configError) return <SetupNeeded reason={configError} />;
@@ -63,6 +64,7 @@ function AuthGate() {
           <Route path="/clientes" component={Clientes} />
           <Route path="/leads" component={Leads} />
           <Route path="/mais" component={Mais} />
+          <Route path="/mais/mensagens" component={Mensagens} />
           <Route>
             <Redirect to="/agenda" />
           </Route>

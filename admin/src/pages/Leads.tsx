@@ -141,7 +141,7 @@ export default function Leads() {
   }
 
   function openWhatsapp(lead: Lead) {
-    window.open(waLink(lead.whatsapp, leadMessage(lead.name, lead.interest)), "_blank", "noopener");
+    window.open(waLink(lead.whatsapp, leadMessage(lead.name, lead.interest, lead.stage === "em_contato")), "_blank", "noopener");
     // Conta como contato: Novos → Em contato, e a temperatura volta a "quente"
     setStage(lead, lead.stage === "novo" ? "em_contato" : lead.stage);
   }

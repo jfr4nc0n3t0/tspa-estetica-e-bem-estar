@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Copy, Droplets, LogOut, Plus, UserRound, UsersRound } from "lucide-react";
+import { ChevronRight, Copy, Droplets, LogOut, MessageCircle, Plus, UserRound, UsersRound } from "lucide-react";
+import { Link } from "wouter";
 import { Sheet } from "../components/Sheet";
 import { useConfirm } from "../components/Confirm";
 import { useToast } from "../components/Toast";
@@ -156,6 +157,18 @@ export default function Mais() {
 
       <SectionTitle>Notificações</SectionTitle>
       <NotificationsSettings />
+
+      <SectionTitle>Mensagens</SectionTitle>
+      <Link href="/mais/mensagens">
+        <Card className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50">
+          <MessageCircle className="h-5 w-5 text-primary" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium">Textos do WhatsApp</span>
+            <span className="block text-xs text-muted-foreground">Leads, confirmação, aniversários e os botões do site</span>
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+        </Card>
+      </Link>
 
       <SectionTitle>Formulário de interesse</SectionTitle>
       <Card className="divide-y divide-border/70">

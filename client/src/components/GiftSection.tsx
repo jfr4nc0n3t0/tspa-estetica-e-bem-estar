@@ -1,11 +1,12 @@
 import { ArrowUpRight } from "lucide-react";
 import { brl, giftCards } from "@/data/services";
 import { whatsappUrl } from "@/lib/contact";
+import { siteMessage } from "@/lib/messages";
 import Reveal from "./Reveal";
 import SectionTitle from "./SectionTitle";
 
 const giftMessage = (price: number, item: string) =>
-  `Olá! Vim pelo site do TSpa e gostaria de um vale-presente de ${brl(price)} (${item.split(" · ")[0]}).`;
+  siteMessage("site_vale_presente", { valor: brl(price), cuidado: item.split(" · ")[0] });
 
 /** Vale-presente: três valores, pedido pelo WhatsApp. */
 export default function GiftSection() {

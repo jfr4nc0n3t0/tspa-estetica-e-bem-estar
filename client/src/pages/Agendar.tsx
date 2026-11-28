@@ -4,6 +4,7 @@ import { SiWhatsapp } from "react-icons/si";
 import logoImage from "@assets/tspa_refugio_mark.png";
 import { experiences, facialServices, feetRitual, headSpaServices, massageServices, packages } from "@/data/services";
 import { whatsappUrl } from "@/lib/contact";
+import { siteMessage } from "@/lib/messages";
 
 // Formulário de interesse: também é o link da bio do Instagram (tspa.com.br/agendar?origem=instagram).
 // O envio vai para /api/leads, que grava o lead no painel administrativo.
@@ -156,7 +157,7 @@ export default function Agendar() {
               Em breve entramos em contato pelo WhatsApp para encontrar o melhor horário para você.
             </p>
             <a
-              href={whatsappUrl(`Olá! Acabei de deixar meu contato no site do TSpa${chosen ? ` e tenho interesse em ${chosen}` : ""}.`)}
+              href={whatsappUrl(siteMessage("site_formulario_enviado", { interesse: chosen }))}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-8 inline-flex items-center gap-2 rounded-full border border-primary/40 px-6 py-3.5 text-sm font-medium text-primary transition hover:bg-primary hover:text-primary-foreground"

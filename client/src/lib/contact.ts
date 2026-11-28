@@ -1,10 +1,12 @@
+import { siteMessage } from "./messages";
+
 export const WHATSAPP_PHONE = "5583988896935";
 export const PHONE_DISPLAY = "(83) 98889-6935";
 export const INSTAGRAM_URL = "https://instagram.com/tspa.jp";
 
 const FROM_SITE = "Olá! Vim pelo site do TSpa";
 
-export function whatsappUrl(message = `${FROM_SITE} e gostaria de agendar um momento.`) {
+export function whatsappUrl(message = siteMessage("site_whatsapp")) {
   return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
 }
 

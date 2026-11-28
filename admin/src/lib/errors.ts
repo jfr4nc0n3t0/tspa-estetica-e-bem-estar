@@ -1,7 +1,7 @@
 /** Transforma erros do Supabase/rede em mensagens claras em português. */
 export function friendlyError(err: unknown): string {
   const e = (err ?? {}) as { code?: string; message?: string; details?: string };
-  const msg = e.message ?? String(err);
+  const msg = typeof e.message === "string" ? e.message : typeof err === "string" ? err : "";
 
   if (e.code === "23P01" || msg.includes("exclusion constraint")) {
     if (msg.includes("room_overlap")) return "Essa sala já tem um atendimento nesse horário.";
@@ -16,6 +16,9 @@ export function friendlyError(err: unknown): string {
   if (e.code === "23514") return "Algum campo está com valor inválido. Confira e tente de novo.";
   if (e.code === "42501" || msg.includes("row-level security")) {
     return "Sem permissão. Confira se o seu e-mail está cadastrado como dona no Supabase.";
+  }
+  if (e.code === "PGRST205" || e.code === "42P01" || msg.includes("Could not find the table")) {
+    return "Essa parte do banco ainda não foi criada. Rode o SQL indicado no Supabase e tente de novo.";
   }
   if (msg === "Invalid login credentials") return "E-mail ou senha incorretos.";
   if (msg.includes("Email not confirmed")) return "E-mail ainda não confirmado no Supabase.";

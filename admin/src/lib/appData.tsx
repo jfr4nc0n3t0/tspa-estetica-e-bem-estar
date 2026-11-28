@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { setMessageOverrides } from "./messages";
 import { nowTs, OPEN_STATUSES } from "./pending";
 import { run, supabase } from "./supabase";
 import type { Appointment, Professional, Service, Settings } from "./types";
@@ -13,6 +14,8 @@ type AppData = {
   refreshSettings: () => Promise<void>;
   refreshServices: () => Promise<void>;
   refreshProfessionals: () => Promise<void>;
+  /** Recarrega os textos de Mais → Mensagens (false se a tabela ainda não existe no banco) */
+  refreshMessages: () => Promise<boolean>;
   /** Atendimentos que já terminaram e ainda estão como agendado/confirmado (mais antigos primeiro) */
   pending: Appointment[];
   refreshPending: () => Promise<void>;
@@ -42,6 +45,16 @@ export function AppDataProvider({ email, children }: { email: string; children: 
   const refreshProfessionals = useCallback(async () => {
     const rows = await run(supabase.from("professionals").select("id, name, active").order("created_at"));
     setProfessionals((rows ?? []) as Professional[]);
+  }, []);
+
+  const refreshMessages = useCallback(async () => {
+    const { data, error } = await supabase.from("message_templates").select("key, body");
+    if (error) {
+      setMessageOverrides({});
+      return false;
+    }
+    setMessageOverrides(Object.fromEntries((data ?? []).map((r) => [r.key as string, r.body as string])));
+    return true;
   }, []);
 
   const refreshPending = useCallback(async () => {
@@ -74,7 +87,8 @@ export function AppDataProvider({ email, children }: { email: string; children: 
     refreshSettings().catch(() => {});
     refreshServices().catch(() => {});
     refreshProfessionals().catch(() => {});
-  }, [refreshSettings, refreshServices, refreshProfessionals]);
+    refreshMessages().catch(() => {});
+  }, [refreshSettings, refreshServices, refreshProfessionals, refreshMessages]);
 
   const professionalName = useCallback(
     (id: string | null | undefined) => professionals.find((p) => p.id === id)?.name ?? "",
@@ -83,7 +97,7 @@ export function AppDataProvider({ email, children }: { email: string; children: 
 
   return (
     <AppDataContext.Provider
-      value={{ settings, services, professionals, professionalName, email, refreshSettings, refreshServices, refreshProfessionals, pending, refreshPending }}
+      value={{ settings, services, professionals, professionalName, email, refreshSettings, refreshServices, refreshProfessionals, refreshMessages, pending, refreshPending }}
     >
       {children}
     </AppDataContext.Provider>

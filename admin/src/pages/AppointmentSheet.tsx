@@ -21,7 +21,7 @@ import {
   type Status,
   type PackageUsage,
 } from "../lib/types";
-import { confirmationMessage, waLink } from "../lib/whatsapp";
+import { afterVisitMessage, confirmationMessage, waLink } from "../lib/whatsapp";
 
 export type AppointmentDefaults = { date?: string; time?: string; room?: 1 | 2; clientId?: string; leadId?: string };
 
@@ -376,12 +376,17 @@ export function AppointmentSheet({ open, onClose, onSaved, appointment, defaults
           )}
           {editing && whatsappNumber && (
             <a
-              href={waLink(whatsappNumber, confirmationMessage(selectedClient?.name ?? "", serviceLabel, `${date}T${time}:00`))}
+              href={waLink(
+                whatsappNumber,
+                appointment?.status === "concluido"
+                  ? afterVisitMessage(selectedClient?.name ?? "", serviceLabel)
+                  : confirmationMessage(selectedClient?.name ?? "", serviceLabel, `${date}T${time}:00`),
+              )}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-11 items-center gap-2 rounded-full border border-input px-4 text-sm font-medium hover:bg-muted"
             >
-              <MessageCircle className="h-4 w-4" /> Confirmar
+              <MessageCircle className="h-4 w-4" /> {appointment?.status === "concluido" ? "Como foi?" : "Confirmar"}
             </a>
           )}
           <Button className="ml-auto min-w-28" onClick={save} loading={saving}>
