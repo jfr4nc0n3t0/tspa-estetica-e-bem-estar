@@ -1,5 +1,5 @@
 import { ArrowUpRight, Clock } from "lucide-react";
-import { experiences } from "@/data/services";
+import { brl, experiences, type Experience } from "@/data/services";
 import { agendarUrl } from "@/lib/contact";
 import PhotoCarousel from "./PhotoCarousel";
 import Reveal from "./Reveal";
@@ -28,7 +28,7 @@ export default function RitualsSection() {
               label={signature.name}
               className="aspect-[4/3] lg:aspect-auto lg:min-h-[28rem]"
             >
-              <DurationChip duration={signature.duration} />
+              <DurationChip experience={signature} />
             </PhotoCarousel>
             <div className="flex flex-col justify-center p-8 md:p-12">
               <span className="self-start rounded-full border border-sand/50 px-3 py-1 text-[0.7rem] uppercase tracking-[0.22em] text-sand">
@@ -37,6 +37,10 @@ export default function RitualsSection() {
               <h3 className="mt-5 font-serif text-4xl md:text-5xl">{signature.name}</h3>
               <p className="mt-3 text-sm uppercase tracking-[0.16em] text-white/60">{signature.combination}</p>
               <p className="mt-6 text-lg leading-relaxed text-white/80">{signature.phrase}</p>
+              <p className="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="font-serif text-4xl">{brl(signature.price)}</span>
+                <Savings experience={signature} />
+              </p>
               <a
                 href={agendarUrl(signature.name)}
                 className="mt-8 inline-flex items-center gap-2 self-start rounded-full bg-nude px-6 py-3 text-sm font-medium text-forest transition hover:bg-white"
@@ -57,10 +61,11 @@ export default function RitualsSection() {
                   label={experience.name}
                   className="aspect-[4/5] rounded-[1.25rem]"
                 >
-                  <DurationChip duration={experience.duration} />
+                  <DurationChip experience={experience} />
                 </PhotoCarousel>
                 <h3 className="mt-5 font-serif text-2xl">{experience.name}</h3>
                 <p className="mt-1 text-xs uppercase tracking-[0.14em] text-sand/90">{experience.combination}</p>
+                <Savings experience={experience} className="mt-2" />
                 <p className="mt-3 text-sm leading-relaxed text-white/70">{experience.phrase}</p>
                 <a
                   href={agendarUrl(experience.name)}
@@ -78,12 +83,25 @@ export default function RitualsSection() {
   );
 }
 
-function DurationChip({ duration }: { duration: string }) {
+function DurationChip({ experience }: { experience: Experience }) {
   return (
     <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground backdrop-blur">
       <Clock className="h-3.5 w-3.5" aria-hidden="true" />
       <span className="sr-only">Duração: </span>
-      {duration}
+      {experience.duration}
+      <span aria-hidden="true">·</span>
+      <strong className="font-semibold">{brl(experience.price)}</strong>
+    </span>
+  );
+}
+
+/** "De R$ 300 · economize R$ 30": só nos rituais que saem mais em conta do que os cuidados separados */
+function Savings({ experience, className = "" }: { experience: Experience; className?: string }) {
+  if (!experience.separatePrice) return null;
+  return (
+    <span className={`block text-sm text-sand ${className}`}>
+      <s className="text-white/45">{brl(experience.separatePrice)}</s>
+      <span className="sr-only"> separados</span> · economize {brl(experience.separatePrice - experience.price)}
     </span>
   );
 }

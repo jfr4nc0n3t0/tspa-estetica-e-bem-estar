@@ -8,7 +8,8 @@ const navItems = [
   { label: "Sobre", href: "#sobre" },
   { label: "Cuidados", href: "#servicos" },
   { label: "Experiências", href: "#experiencias" },
-  { label: "Planos", href: "#planos" },
+  { label: "Pacotes", href: "#pacotes" },
+  { label: "Depoimentos", href: "#depoimentos" },
   { label: "Visite", href: "#localizacao" },
 ];
 
@@ -42,7 +43,7 @@ export default function Header() {
       data-testid="header"
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 md:h-20 md:px-8">
-        <a href="#inicio" className="flex items-center" data-testid="link-logo" onClick={() => setIsMenuOpen(false)}>
+        <a href="#inicio" className="flex shrink-0 items-center" data-testid="link-logo" onClick={() => setIsMenuOpen(false)}>
           <img
             src={logoImage}
             alt="TSpa — Refúgio do Corpo e da Alma"
@@ -50,7 +51,7 @@ export default function Header() {
           />
         </a>
 
-        <nav aria-label="Principal" className="hidden items-center gap-1 md:flex" data-testid="nav-desktop">
+        <nav aria-label="Principal" className="hidden items-center gap-1 lg:flex" data-testid="nav-desktop">
           {navItems.map((item) => (
             <a
               key={item.href}
@@ -67,7 +68,7 @@ export default function Header() {
 
         <a
           href={agendarUrl()}
-          className={`hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition md:inline-flex ${
+          className={`hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition lg:inline-flex ${
             solid
               ? "bg-primary text-primary-foreground hover:bg-forest"
               : "border border-white/40 text-white hover:bg-white/10"
@@ -80,7 +81,7 @@ export default function Header() {
 
         <button
           type="button"
-          className={`grid h-10 w-10 place-items-center rounded-full md:hidden ${
+          className={`grid h-10 w-10 place-items-center rounded-full lg:hidden ${
             solid ? "text-foreground" : "text-white"
           }`}
           onClick={() => setIsMenuOpen((open) => !open)}
@@ -94,7 +95,7 @@ export default function Header() {
 
       {isMenuOpen && (
         <div
-          className="h-[calc(100svh-4rem)] overflow-y-auto bg-background px-6 pb-10 pt-6 md:hidden"
+          className="h-[calc(100svh-4rem)] overflow-y-auto bg-background px-6 pb-10 pt-6 lg:hidden"
           data-testid="nav-mobile"
         >
           <nav aria-label="Menu" className="flex flex-col">

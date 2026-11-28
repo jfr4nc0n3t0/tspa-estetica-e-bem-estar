@@ -35,6 +35,11 @@ export default function HowItWorksSection() {
             </Reveal>
           ))}
         </ol>
+        <Reveal>
+          <p className="mx-auto mt-14 max-w-xl text-center text-sm text-muted-foreground">
+            Reagendamentos e cancelamentos com pelo menos 24 horas de antecedência.
+          </p>
+        </Reveal>
       </div>
     </section>
   );

@@ -1,5 +1,5 @@
 import { ArrowUpRight, X } from "lucide-react";
-import { firstVisitPhoto, headSpaServices } from "@/data/services";
+import { brl, firstVisitPhoto, headSpaServices } from "@/data/services";
 import { agendarUrl } from "@/lib/contact";
 
 /**
@@ -34,6 +34,9 @@ export default function FirstVisitBanner({ shown, onClose }: { shown: boolean; o
           <span className="min-w-0">
             <span className="block text-[0.65rem] font-medium uppercase tracking-[0.2em] text-taupe">Primeira vez no TSpa?</span>
             <span className="mt-0.5 block font-serif text-xl leading-tight text-foreground">Comece pelo {essencial.name}</span>
+            <span className="mt-0.5 block text-sm text-muted-foreground">
+              {essencial.duration} · <strong className="font-semibold text-foreground">{brl(essencial.price)}</strong>
+            </span>
             {/* Computador: chamada em texto, ao lado da foto */}
             <span className="mt-1 hidden items-center gap-1 text-sm font-medium text-primary md:inline-flex">
               Quero conhecer
@@ -43,7 +46,7 @@ export default function FirstVisitBanner({ shown, onClose }: { shown: boolean; o
         </span>
         {/* Celular: frase e botão largo */}
         <span className="mt-2 block pr-2 text-sm text-muted-foreground md:hidden">
-          {essencial.duration.replace(" min", " minutos")} para conhecer o ritual que mais encanta quem chega.
+          O ritual que mais encanta quem chega.
         </span>
         <span className="mt-3 flex items-center justify-center gap-1.5 rounded-full bg-primary py-2.5 text-sm font-medium text-primary-foreground transition group-hover:bg-primary/90 md:hidden">
           Quero conhecer

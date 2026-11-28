@@ -18,16 +18,16 @@ export function agendarUrl(interest?: string) {
   return `/agendar?${params.toString()}`;
 }
 
-type BookingKind = "servico" | "experiencia" | "plano";
+type BookingKind = "servico" | "experiencia" | "pacote";
 
 const kindLabel: Record<BookingKind, string> = {
   servico: "o serviço",
   experiencia: "a experiência",
-  plano: "o plano",
+  pacote: "o pacote",
 };
 
 /** Pre-filled WhatsApp message saying the visitor came from the site and what they want to book. */
 export function bookingMessage(name: string, kind: BookingKind = "servico") {
-  if (kind === "plano") return `${FROM_SITE} e gostaria de saber mais sobre ${kindLabel.plano} ${name}.`;
+  if (kind === "pacote") return `${FROM_SITE} e gostaria de saber mais sobre ${kindLabel.pacote} ${name}.`;
   return `${FROM_SITE} e gostaria de agendar ${kindLabel[kind]} ${name}.`;
 }

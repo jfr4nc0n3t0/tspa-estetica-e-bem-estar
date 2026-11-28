@@ -5,7 +5,9 @@ import ManifestoSection from "@/components/ManifestoSection";
 import AboutSection from "@/components/AboutSection";
 import ServicesSection from "@/components/ServicesSection";
 import RitualsSection from "@/components/RitualsSection";
-import PlansSection from "@/components/PlansSection";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import PackagesSection from "@/components/PackagesSection";
+import GiftSection from "@/components/GiftSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import LocationSection from "@/components/LocationSection";
 import Footer from "@/components/Footer";
@@ -38,7 +40,9 @@ export default function Home() {
         <AboutSection />
         <ServicesSection />
         <RitualsSection />
-        <PlansSection />
+        <PackagesSection />
+        <GiftSection />
+        <TestimonialsSection />
         <HowItWorksSection />
         <LocationSection />
       </main>

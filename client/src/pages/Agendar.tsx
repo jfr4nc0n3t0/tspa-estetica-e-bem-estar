@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ChevronDown } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import logoImage from "@assets/tspa_refugio_mark.png";
-import { experiences, facialServices, feetRitual, headSpaServices, massageServices, plans } from "@/data/services";
+import { experiences, facialServices, feetRitual, headSpaServices, massageServices, packages } from "@/data/services";
 import { whatsappUrl } from "@/lib/contact";
 
 // Formulário de interesse: também é o link da bio do Instagram (tspa.com.br/agendar?origem=instagram).
@@ -24,7 +24,8 @@ const INTEREST_GROUPS = [
   { label: "Massagens", items: massageServices.map((s) => s.name) },
   { label: "Cuidados faciais", items: facialServices.map((s) => s.name) },
   { label: "Rituais e experiências", items: [...feetRitual.map((s) => s.name), ...experiences.map((e) => e.name)] },
-  { label: "Planos", items: plans.map((p) => `Plano ${p.name}`) },
+  { label: "Pacotes", items: packages.map((p) => `Pacote ${p.name}`) },
+  { label: "Vale-presente", items: ["Vale-presente"] },
 ];
 
 // Cloudflare Turnstile ("não sou robô", grátis e quase sempre invisível). Só liga se a chave existir no build.

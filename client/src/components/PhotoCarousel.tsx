@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { photoFocus } from "@/data/services";
 
 type PhotoCarouselProps = {
   images: string[];
@@ -43,6 +44,7 @@ export default function PhotoCarousel({
           alt={index === 0 ? `${label} no TSpa, em João Pessoa` : ""}
           loading="lazy"
           decoding="async"
+          style={{ objectPosition: photoFocus(src) }}
           className={`absolute inset-0 h-full w-full object-cover transition-all duration-[1200ms] group-hover/carousel:scale-[1.03] ${
             index === active ? "opacity-100" : "opacity-0"
           }`}

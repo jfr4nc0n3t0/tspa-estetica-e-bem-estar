@@ -1,6 +1,7 @@
-import { ArrowUpRight, Clock, Plus } from "lucide-react";
+import { ArrowUpRight, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  brl,
   facialServices,
   feetRitual,
   firstVisitPhoto,
@@ -51,30 +52,30 @@ function SessionCard({ session }: { session: Session }) {
         <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground backdrop-blur">
           <Clock className="h-3.5 w-3.5" aria-hidden="true" />
           {session.duration}
+          <span aria-hidden="true">·</span>
+          <strong className="font-semibold">{brl(session.price)}</strong>
         </span>
+        {session.isNew && (
+          <span className="absolute right-4 top-4 rounded-full bg-primary px-3 py-1 text-[0.65rem] font-medium uppercase tracking-[0.16em] text-primary-foreground">
+            Novidade
+          </span>
+        )}
       </PhotoCarousel>
 
       <div className="flex flex-1 flex-col pt-6">
         <p className="text-[0.7rem] font-medium uppercase tracking-[0.22em] text-taupe">{session.characteristic}</p>
         <h3 className="mt-2 font-serif text-[1.75rem] leading-tight text-foreground">{session.name}</h3>
         <p className="mt-3 text-[0.95rem] leading-relaxed text-muted-foreground">{session.phrase}</p>
-        {session.complement ? (
-          <div className="mt-auto pt-5">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1.5 text-sm font-medium text-primary">
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Adicione a qualquer cuidado
-            </span>
-            <p className="mt-2 text-sm text-muted-foreground">Peça junto ao agendar o seu cuidado.</p>
-          </div>
-        ) : (
-          <a
-            href={agendarUrl(session.name)}
-            className="mt-auto inline-flex items-center gap-1.5 self-start border-b border-primary/30 pb-1 pt-5 text-sm font-medium text-primary transition hover:border-primary"
-          >
-            Agendar este cuidado
-            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-          </a>
+        {session.addOnPrice && (
+          <p className="mt-3 text-sm font-medium text-primary">+ {brl(session.addOnPrice)} junto de outro cuidado</p>
         )}
+        <a
+          href={agendarUrl(session.name)}
+          className="mt-auto inline-flex items-center gap-1.5 self-start border-b border-primary/30 pb-1 pt-5 text-sm font-medium text-primary transition hover:border-primary"
+        >
+          Agendar este cuidado
+          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+        </a>
       </div>
     </article>
   );
@@ -164,7 +165,7 @@ function FirstVisitInvite() {
         <span className="block text-[0.7rem] font-medium uppercase tracking-[0.22em] text-taupe">Primeira vez no TSpa?</span>
         <span className="mt-1 block font-serif text-2xl leading-tight text-foreground md:text-[1.75rem]">Comece pelo {essencial.name}</span>
         <span className="mt-1 block text-sm text-muted-foreground">
-          {essencial.duration.replace(" min", " minutos")} para conhecer o ritual que mais encanta quem chega.
+          {essencial.duration.replace(" min", " minutos")}, por <strong className="font-semibold text-foreground">{brl(essencial.price)}</strong>, para conhecer o ritual que mais encanta quem chega.
         </span>
       </span>
       <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition group-hover:bg-primary/90">
