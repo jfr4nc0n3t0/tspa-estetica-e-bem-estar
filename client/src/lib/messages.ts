@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 export const SITE_MESSAGES = {
   site_whatsapp: "Olá! Vim pelo site do TSpa e gostaria de agendar um momento.",
   site_vale_presente: "Olá! Vim pelo site do TSpa e gostaria de um vale-presente de {valor} ({cuidado}).",
+  site_vale_presente_livre: "Olá! Vim pelo site do TSpa e gostaria de dar um vale-presente.",
   site_formulario_enviado: "Olá! Acabei de deixar meu contato no site do TSpa[ e tenho interesse em {interesse}].",
 } as const;
 

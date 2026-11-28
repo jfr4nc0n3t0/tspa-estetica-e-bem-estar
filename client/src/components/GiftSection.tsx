@@ -8,7 +8,7 @@ import SectionTitle from "./SectionTitle";
 const giftMessage = (price: number, item: string) =>
   siteMessage("site_vale_presente", { valor: brl(price), cuidado: item.split(" · ")[0] });
 
-/** Vale-presente: três valores, pedido pelo WhatsApp. */
+/** Vale-presente: qualquer cuidado vira presente; três sugestões prontas para quem não sabe o que escolher. */
 export default function GiftSection() {
   return (
     <section id="vale-presente" className="scroll-mt-16 bg-nude py-24 md:py-28" data-testid="section-vale-presente">
@@ -16,11 +16,24 @@ export default function GiftSection() {
         <Reveal>
           <SectionTitle
             eyebrow="Vale-presente"
-            title="Presenteie com uma pausa."
-            description="Enviado em cartão digital com o nome de quem vai receber. Pode ser usado por outra pessoa e vale por 90 dias."
+            title="Qualquer cuidado pode virar presente."
+            description="Um serviço, um ritual, um pacote ou o valor que você quiser. Enviado em cartão digital com o nome de quem vai receber."
           />
         </Reveal>
-        <div className="mx-auto mt-12 grid max-w-5xl gap-5 md:grid-cols-3">
+        <Reveal className="mt-8 flex justify-center">
+          <a
+            href={whatsappUrl(siteMessage("site_vale_presente_livre"))}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+            data-testid="link-vale-livre"
+          >
+            Montar um presente
+            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          </a>
+        </Reveal>
+        <p className="mt-14 text-center text-[0.7rem] font-medium uppercase tracking-[0.22em] text-taupe">Sugestões para presentear</p>
+        <div className="mx-auto mt-5 grid max-w-5xl gap-5 md:grid-cols-3">
           {giftCards.map((gift, index) => {
             const featured = index === giftCards.length - 1;
             return (
@@ -50,6 +63,9 @@ export default function GiftSection() {
             );
           })}
         </div>
+        <p className="mx-auto mt-8 max-w-xl text-center text-sm leading-relaxed text-muted-foreground">
+          Pode ser usado por outra pessoa e vale por 30 dias a partir da data do presente (por exemplo, o dia do aniversário ou o Natal).
+        </p>
       </div>
     </section>
   );

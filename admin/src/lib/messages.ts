@@ -113,6 +113,14 @@ export const MESSAGES: MessageDef[] = [
     ],
   },
   {
+    key: "site_vale_presente_livre",
+    group: "Site",
+    title: "Montar um presente",
+    where: "O que a visitante manda ao tocar em “Montar um presente” (qualquer cuidado ou valor)",
+    body: "Olá! Vim pelo site do TSpa e gostaria de dar um vale-presente.",
+    vars: [],
+  },
+  {
     key: "site_formulario_enviado",
     group: "Site",
     title: "Depois do formulário",

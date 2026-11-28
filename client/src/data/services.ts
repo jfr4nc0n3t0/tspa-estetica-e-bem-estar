@@ -321,7 +321,7 @@ export const packages: Package[] = [
   },
 ];
 
-/** Vale-presente: transferível, válido por 90 dias */
+/** Sugestões de vale-presente (qualquer cuidado também vira presente): transferível, vale 30 dias a partir da data do presente */
 export const giftCards = [
   { id: "vale-130", label: "O primeiro presente", price: 130, item: "Head Spa Essencial · 30 min" },
   { id: "vale-270", label: "Da cabeça ao corpo", price: 270, item: "Ritual Conexão · Head Spa + massagem" },
