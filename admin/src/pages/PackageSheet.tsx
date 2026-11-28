@@ -13,6 +13,7 @@ import { PAYMENT_LABEL, type ClientPackage, type PackageUsage } from "../lib/typ
 type Method = ClientPackage["payment_method"];
 const METHODS: Method[] = ["pix", "credito", "debito", "dinheiro"];
 const VALIDITY = [
+  { months: 2, label: "2 meses" }, // pacote Ritmo: 4 sessões a cada 15 dias
   { months: 3, label: "3 meses" },
   { months: 6, label: "6 meses" },
   { months: 12, label: "12 meses" },
