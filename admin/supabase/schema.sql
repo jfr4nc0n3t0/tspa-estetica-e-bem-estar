@@ -840,6 +840,11 @@ alter table public.settings add column if not exists notify_before_min smallint 
 alter table public.settings drop constraint if exists settings_notify_before;
 alter table public.settings add constraint settings_notify_before check (notify_before_min between 5 and 240);
 
+-- Meta de atendimentos por mês (Mais → Meta do mês; aparece em Análises)
+alter table public.settings add column if not exists monthly_goal smallint not null default 45;
+alter table public.settings drop constraint if exists settings_monthly_goal;
+alter table public.settings add constraint settings_monthly_goal check (monthly_goal between 1 and 999);
+
 -- Aparelhos que recebem as notificações (um por celular/navegador ativado)
 create table if not exists public.push_subscriptions (
   id uuid primary key default gen_random_uuid(),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronRight, Copy, Droplets, LogOut, MessageCircle, Plus, UserRound, UsersRound } from "lucide-react";
+import { BarChart3, ChevronRight, Copy, Droplets, LogOut, MessageCircle, Plus, UserRound, UsersRound } from "lucide-react";
 import { Link } from "wouter";
 import { Sheet } from "../components/Sheet";
 import { useConfirm } from "../components/Confirm";
@@ -26,13 +26,21 @@ export default function Mais() {
   const [open, setOpen] = useState(settings.open_time.slice(0, 5));
   const [close, setClose] = useState(settings.close_time.slice(0, 5));
   const [busy, setBusy] = useState<string | null>(null);
+  const [goal, setGoal] = useState(String(settings.monthly_goal));
 
   useEffect(() => {
     setOpen(settings.open_time.slice(0, 5));
     setClose(settings.close_time.slice(0, 5));
+    setGoal(String(settings.monthly_goal));
   }, [settings]);
 
-  async function updateSettings(patch: Partial<{ open_time: string; close_time: string; room2_enabled: boolean }>, message: string) {
+  function saveGoal() {
+    const n = Number(goal);
+    if (!Number.isInteger(n) || n < 1 || n > 999) return toast("Digite uma meta entre 1 e 999 atendimentos.", "error");
+    updateSettings({ monthly_goal: n }, "Meta do mês salva.");
+  }
+
+  async function updateSettings(patch: Partial<{ open_time: string; close_time: string; room2_enabled: boolean; monthly_goal: number }>, message: string) {
     try {
       await run(supabase.from("settings").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1));
       await refreshSettings();
@@ -145,6 +153,16 @@ export default function Mais() {
         </Button>
       </Card>
 
+      <SectionTitle>Meta do mês</SectionTitle>
+      <Card className="p-4">
+        <Field label="Atendimentos concluídos por mês" hint="Aparece em Análises, junto com quantos atendimentos pagam o mês.">
+          <Input inputMode="numeric" value={goal} onChange={(e) => setGoal(e.target.value.replace(/\D/g, ""))} className="max-w-32" />
+        </Field>
+        <Button className="mt-3" size="sm" onClick={saveGoal} disabled={goal === String(settings.monthly_goal)}>
+          Salvar meta
+        </Button>
+      </Card>
+
       <SectionTitle>Salas</SectionTitle>
       <Card className="p-4">
         <Switch
@@ -157,6 +175,18 @@ export default function Mais() {
 
       <SectionTitle>Notificações</SectionTitle>
       <NotificationsSettings />
+
+      <SectionTitle>Análises</SectionTitle>
+      <Link href="/mais/analises">
+        <Card className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50">
+          <BarChart3 className="h-5 w-5 text-primary" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium">O que está dando certo</span>
+            <span className="block text-xs text-muted-foreground">Meta do mês, serviços e clientes que mais vieram, oportunidades</span>
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+        </Card>
+      </Link>
 
       <SectionTitle>Mensagens</SectionTitle>
       <Link href="/mais/mensagens">

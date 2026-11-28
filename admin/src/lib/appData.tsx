@@ -23,7 +23,7 @@ type AppData = {
 
 const AppDataContext = createContext<AppData | null>(null);
 
-const DEFAULT_SETTINGS: Settings = { open_time: "08:00:00", close_time: "20:00:00", room2_enabled: false, notify_daily_time: "07:30:00", notify_before_min: 30 };
+const DEFAULT_SETTINGS: Settings = { open_time: "08:00:00", close_time: "20:00:00", room2_enabled: false, notify_daily_time: "07:30:00", notify_before_min: 30, monthly_goal: 45 };
 
 export function AppDataProvider({ email, children }: { email: string; children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);

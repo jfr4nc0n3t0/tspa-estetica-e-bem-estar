@@ -94,6 +94,22 @@ export const MESSAGES: MessageDef[] = [
     vars: [NOME, DATA],
   },
   {
+    key: "cliente_saudade",
+    group: "Clientes",
+    title: "Sentimos sua falta",
+    where: "Análises → Vale uma mensagem (cliente que não vem há mais de 60 dias)",
+    body: "Olá, {nome}! Aqui é do TSpa 🌿\n\nSentimos sua falta por aqui. Que tal reservar um momento de cuidado nesta semana? Se quiser, te mando os horários livres.",
+    vars: [NOME],
+  },
+  {
+    key: "cliente_pacote_vencendo",
+    group: "Clientes",
+    title: "Pacote perto de vencer",
+    where: "Análises → Pacotes que vencem nos próximos 30 dias",
+    body: "Olá, {nome}! Aqui é do TSpa 🌿\n\nPassando para lembrar que o seu pacote de {servico} ainda tem {sessoes} e vale até {data}. Vamos agendar?",
+    vars: [NOME, SERVICO, { name: "sessoes", label: "sessões restantes", sample: "2 sessões" }, { name: "data", label: "validade", sample: "15/12" }],
+  },
+  {
     key: "site_whatsapp",
     group: "Site",
     title: "Botão de WhatsApp",

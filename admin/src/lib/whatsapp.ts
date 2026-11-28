@@ -42,3 +42,18 @@ export function birthdayMonthMessage(name: string, birthday: string) {
   const upcoming = day > new Date().getDate();
   return message(upcoming ? "cliente_aniversario_chegando" : "cliente_aniversario_passou", { nome: firstName(name), data: date });
 }
+
+/** Cliente que não vem há mais de 60 dias (Análises) */
+export function missYouMessage(name: string) {
+  return message("cliente_saudade", { nome: firstName(name) });
+}
+
+/** Pacote com sessões sobrando perto da validade (Análises) */
+export function packageExpiringMessage(name: string, serviceName: string, sessions: number, expiresAt: string) {
+  return message("cliente_pacote_vencendo", {
+    nome: firstName(name),
+    servico: serviceName,
+    sessoes: sessions === 1 ? "1 sessão" : `${sessions} sessões`,
+    data: `${expiresAt.slice(8, 10)}/${expiresAt.slice(5, 7)}`,
+  });
+}
